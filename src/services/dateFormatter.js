@@ -80,7 +80,7 @@ export function formatDateForInput(date) {
 export function parseFrenchDate(dateStr) {
     if (!dateStr) return null;
 
-    const separatorMatch = dateStr.match(/[-\/]/);
+    const separatorMatch = dateStr.match(/[-/]/);
     if (!separatorMatch) return null;
 
     const separator = separatorMatch[0];

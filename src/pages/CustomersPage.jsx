@@ -9,6 +9,7 @@ function CustomersPage() {
     const [customers, setCustomers] = useState([])
     const [searchQuery, setSearchQuery] = useState('')
     const [showModal, setShowModal] = useState(false)
+    const [isSubmitting, setIsSubmitting] = useState(false)
     const [editingCustomer, setEditingCustomer] = useState(null)
     const [formData, setFormData] = useState({
         name: '',
@@ -74,6 +75,7 @@ function CustomersPage() {
             return
         }
 
+        setIsSubmitting(true)
         try {
             if (window.electronAPI) {
                 if (editingCustomer) {
@@ -92,6 +94,8 @@ function CustomersPage() {
         } catch (error) {
             console.error('Error saving customer:', error)
             toast.error("Erreur lors de l'enregistrement")
+        } finally {
+            setIsSubmitting(false)
         }
     }
 
@@ -214,10 +218,10 @@ function CustomersPage() {
                 title={editingCustomer ? 'Modifier le client' : 'Ajouter un client'}
                 footer={
                     <>
-                        <Button variant="outline" onClick={closeModal}>
+                        <Button variant="outline" onClick={closeModal} disabled={isSubmitting}>
                             Annuler
                         </Button>
-                        <Button onClick={handleSubmit}>
+                        <Button onClick={handleSubmit} isLoading={isSubmitting}>
                             {editingCustomer ? 'Modifier' : 'Ajouter'}
                         </Button>
                     </>

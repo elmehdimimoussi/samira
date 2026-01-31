@@ -64,7 +64,7 @@ export function parseAmount(formattedAmount) {
  */
 export function formatAmountLive(input) {
     // Remove all non-numeric characters except comma and dot
-    let cleaned = input.replace(/[^\d,\.]/g, '');
+    let cleaned = input.replace(/[^\d,.]/g, '');
 
     // Replace dot with comma (French format)
     cleaned = cleaned.replace('.', ',');

@@ -1,4 +1,5 @@
 import React from 'react';
+import { Loader2 } from 'lucide-react';
 
 export const Button = ({ 
   children, 
@@ -7,6 +8,7 @@ export const Button = ({
   icon,
   className = '', 
   disabled,
+  isLoading,
   onClick,
   type = 'button',
   ...props 
@@ -19,11 +21,15 @@ export const Button = ({
     <button
       type={type}
       className={`${baseClass} ${variantClass} ${sizeClass} ${className}`}
-      disabled={disabled}
+      disabled={disabled || isLoading}
       onClick={onClick}
       {...props}
     >
-      {icon && <span className="btn-icon-wrapper">{icon}</span>}
+      {isLoading ? (
+        <Loader2 className="animate-spin w-4 h-4 mr-2 inline-block" />
+      ) : (
+        icon && <span className="btn-icon-wrapper">{icon}</span>
+      )}
       {children}
     </button>
   );
