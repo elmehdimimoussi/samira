@@ -1,4 +1,4 @@
-import { Routes, Route, NavLink, useLocation } from 'react-router-dom'
+import { Routes, Route, NavLink } from 'react-router-dom'
 import { Toaster } from 'sonner'
 import { FileText, Users, ClipboardList, Settings, Wallet } from 'lucide-react'
 import FillingPage from './pages/FillingPage'
@@ -9,8 +9,6 @@ import { ThemeToggle } from './components/ThemeToggle'
 // import logo from '../public/logo.png' 
 
 function App() {
-  const location = useLocation()
-
   const navItems = [
     { path: '/', icon: FileText, label: 'Remplissage' },
     { path: '/customers', icon: Users, label: 'Clients' },
