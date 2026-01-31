@@ -1,0 +1,81 @@
+import { useState, createContext, useContext, useRef, useEffect } from 'react'
+import { ChevronDown } from 'lucide-react'
+
+const AccordionContext = createContext({})
+
+export function Accordion({ children, value, onValueChange, defaultValue, type = "single", className = "" }) {
+    const [internalValue, setInternalValue] = useState(defaultValue || (type === "single" ? "" : []))
+
+    const isControlled = value !== undefined
+    const currentValue = isControlled ? value : internalValue
+
+    const handleValueChange = (itemValue) => {
+        if (isControlled) {
+            onValueChange?.(itemValue)
+        } else {
+            if (type === "single") {
+                setInternalValue(prev => prev === itemValue ? "" : itemValue)
+            } else {
+                setInternalValue(prev => {
+                    if (prev.includes(itemValue)) {
+                        return prev.filter(v => v !== itemValue)
+                    }
+                    return [...prev, itemValue]
+                })
+            }
+        }
+    }
+
+    return (
+        <AccordionContext.Provider value={{ value: currentValue, onValueChange: handleValueChange, type }}>
+            <div className={`space-y-2 ${className}`}>
+                {children}
+            </div>
+        </AccordionContext.Provider>
+    )
+}
+
+export function AccordionItem({ value: itemValue, title, children, className = "" }) {
+    const { value, onValueChange, type } = useContext(AccordionContext)
+    const isOpen = type === "single" ? value === itemValue : value.includes(itemValue)
+    const contentRef = useRef(null)
+    const [height, setHeight] = useState(0)
+    const [overflow, setOverflow] = useState('hidden')
+
+    useEffect(() => {
+        if (isOpen) {
+            const contentEl = contentRef.current
+            setHeight(contentEl.scrollHeight)
+            const timer = setTimeout(() => setOverflow('visible'), 300)
+            return () => clearTimeout(timer)
+        } else {
+            setOverflow('hidden')
+            setHeight(0)
+        }
+    }, [isOpen, children])
+
+    return (
+        <div className={`bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm transition-all duration-200 ${isOpen ? 'ring-2 ring-blue-500/20 border-blue-500/50' : ''} ${className}`}>
+            <button
+                type="button"
+                onClick={() => onValueChange(itemValue)}
+                className="w-full flex items-center justify-between p-4 text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+            >
+                <span className="font-semibold text-slate-700 dark:text-slate-200">{title}</span>
+                <ChevronDown
+                    className={`w-5 h-5 text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180 text-blue-500' : ''}`}
+                />
+            </button>
+            <div
+                style={{ height, overflow }}
+                className="transition-[height] duration-300 ease-in-out"
+            >
+                <div ref={contentRef} className="p-4 pt-0 border-t border-transparent">
+                    <div className="pt-4 border-t border-slate-100 dark:border-slate-700/50">
+                        {children}
+                    </div>
+                </div>
+            </div>
+        </div>
+    )
+}

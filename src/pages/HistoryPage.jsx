@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { formatDate } from '../services/dateFormatter'
@@ -12,11 +12,7 @@ function HistoryPage() {
     const [searchQuery, setSearchQuery] = useState('')
     const [dateFilter, setDateFilter] = useState({ from: '', to: '' })
 
-    useEffect(() => {
-        loadOperations()
-    }, [])
-
-    const loadOperations = async () => {
+    const loadOperations = useCallback(async () => {
         try {
             if (window.electronAPI) {
                 const result = await window.electronAPI.operations.getAll()
@@ -26,7 +22,12 @@ function HistoryPage() {
             console.error('Error loading operations:', error)
             toast.error('Erreur lors du chargement de l\'historique')
         }
-    }
+    }, [])
+
+    useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        loadOperations()
+    }, [loadOperations])
 
     const stats = useMemo(() => {
         const now = new Date()

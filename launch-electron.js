@@ -1,48 +1,72 @@
-// Launcher script that temporarily hides the npm electron package
-// to allow Electron's internal 'electron' module to be resolved
 const { spawn } = require('child_process');
 const path = require('path');
-const fs = require('fs');
 
-const electronPkgDir = path.join(__dirname, 'node_modules', 'electron');
-const indexJs = path.join(electronPkgDir, 'index.js');
-const indexJsBak = path.join(electronPkgDir, 'index.js.launching');
-const electronBinary = path.join(electronPkgDir, 'dist', 'electron.exe');
+// Disable GPU acceleration if needed (can fix some rendering issues)
+// const { app } = require('electron');
+// app.disableHardwareAcceleration();
 
-// Rename index.js to hide it from module resolution
-if (fs.existsSync(indexJs)) {
-    fs.renameSync(indexJs, indexJsBak);
-    console.log('Temporarily renamed electron/index.js');
+const VITE_PORT = 5174;
+const WAIT_TIMEOUT = 30000; // 30 seconds
+
+// Check if dev server is ready
+function checkDevServer(url) {
+  return new Promise((resolve, reject) => {
+    const http = require('http');
+    const start = Date.now();
+
+    const check = () => {
+      http.get(url, (res) => {
+        if (res.statusCode === 200) {
+          resolve();
+        } else {
+          retry();
+        }
+      }).on('error', retry);
+    };
+
+    const retry = () => {
+      if (Date.now() - start > WAIT_TIMEOUT) {
+        reject(new Error('Timeout waiting for dev server'));
+      } else {
+        setTimeout(check, 1000);
+      }
+    };
+
+    check();
+  });
 }
 
-// Spawn electron
-const child = spawn(electronBinary, ['.'], {
-    stdio: 'inherit',
-    cwd: __dirname
-});
+// Start Electron
+async function startElectron() {
+  try {
+    const isDev = process.env.NODE_ENV === 'development' || process.argv.includes('--dev');
 
-child.on('close', (code) => {
-    // Restore index.js
-    if (fs.existsSync(indexJsBak)) {
-        fs.renameSync(indexJsBak, indexJs);
-        console.log('Restored electron/index.js');
+    if (isDev) {
+      console.log('Waiting for Vite dev server...');
+      await checkDevServer(`http://localhost:${VITE_PORT}`);
+      console.log('Dev server ready, launching Electron...');
     }
-    process.exit(code);
-});
 
-child.on('error', (err) => {
-    // Restore index.js on error
-    if (fs.existsSync(indexJsBak)) {
-        fs.renameSync(indexJsBak, indexJs);
-    }
-    console.error('Electron launch error:', err);
+    const electronPath = require('electron');
+    const mainPath = path.join(__dirname, 'electron/main.cjs');
+
+    // Pass arguments to the child process
+    const args = [mainPath];
+    if (isDev) args.push('--dev');
+
+    const child = spawn(electronPath, args, {
+      stdio: 'inherit',
+      env: process.env
+    });
+
+    child.on('close', (code) => {
+      process.exit(code);
+    });
+
+  } catch (error) {
+    console.error('Failed to start Electron:', error);
     process.exit(1);
-});
+  }
+}
 
-// Handle ctrl+c
-process.on('SIGINT', () => {
-    if (fs.existsSync(indexJsBak)) {
-        fs.renameSync(indexJsBak, indexJs);
-    }
-    process.exit();
-});
+startElectron();
