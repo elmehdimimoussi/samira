@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useId } from 'react'
 import { toast } from 'sonner'
 import { convertAmountToFrench } from '../services/frenchTextConverter'
 import { formatAmountLive, parseAmount } from '../services/amountFormatter'
@@ -57,6 +57,8 @@ function FillingPage() {
     const [filteredCustomers, setFilteredCustomers] = useState([])
     const [frames, setFrames] = useState([])
     const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0 })
+
+    const drawerNameId = useId()
 
     // Load initial data
     useEffect(() => {
@@ -403,9 +405,10 @@ function FillingPage() {
                             <AccordionItem value="drawer" title="4. Le Tiré (Client)">
                                 <div className="space-y-4">
                                     <div className="form-group relative mb-0">
-                                        <label className="form-label">Nom ou dénomination</label>
+                                        <label htmlFor={drawerNameId} className="form-label">Nom ou dénomination</label>
                                         <div className="autocomplete-container">
                                             <input
+                                                id={drawerNameId}
                                                 type="text"
                                                 className="form-input font-bold"
                                                 placeholder="Rechercher un client..."

@@ -11,3 +11,7 @@
 ## 2024-10-26 - Loading States
 **Learning:** `Button` component was missing native loading state support.
 **Action:** Successfully added `isLoading` prop using `lucide-react` icons. This pattern should be applied to other async buttons in the app.
+
+## 2024-10-27 - Automated Input Accessibility
+**Learning:** React's `useId` hook is a robust way to automatically generate unique IDs for accessibility attributes without requiring manual `id` props from consumers.
+**Action:** Implemented `useId` in `Input` and `Textarea` components to automatically link labels with inputs via `htmlFor`, resolving the accessibility gap identified on 2024-10-26.
