@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { formatDate } from '../services/dateFormatter'
@@ -11,19 +11,10 @@ function HistoryPage() {
     const [operations, setOperations] = useState([])
     const [searchQuery, setSearchQuery] = useState('')
     const [dateFilter, setDateFilter] = useState({ from: '', to: '' })
-    const [stats, setStats] = useState({
-        totalCount: 0,
-        totalAmount: 0,
-        thisMonthAmount: 0
-    })
 
     useEffect(() => {
         loadOperations()
     }, [])
-
-    useEffect(() => {
-        calculateStats()
-    }, [operations])
 
     const loadOperations = async () => {
         try {
@@ -37,7 +28,7 @@ function HistoryPage() {
         }
     }
 
-    const calculateStats = () => {
+    const stats = useMemo(() => {
         const now = new Date()
         const thisMonth = now.getMonth()
         const thisYear = now.getFullYear()
@@ -56,37 +47,39 @@ function HistoryPage() {
             }
         })
 
-        setStats({
+        return {
             totalCount: operations.length,
             totalAmount,
             thisMonthAmount
+        }
+    }, [operations])
+
+    const filteredOperations = useMemo(() => {
+        return operations.filter(op => {
+            // Text search
+            const searchLower = searchQuery.toLowerCase()
+            const matchesSearch = !searchQuery ||
+                (op.beneficiary_name && op.beneficiary_name.toLowerCase().includes(searchLower)) ||
+                (op.reference_number && op.reference_number.toLowerCase().includes(searchLower)) ||
+                (op.amount_numeric && op.amount_numeric.includes(searchQuery))
+
+            // Date filter
+            let matchesDate = true
+            if (dateFilter.from) {
+                const opDate = new Date(op.created_at)
+                const fromDate = new Date(dateFilter.from)
+                if (opDate < fromDate) matchesDate = false
+            }
+            if (dateFilter.to) {
+                const opDate = new Date(op.created_at)
+                const toDate = new Date(dateFilter.to)
+                toDate.setHours(23, 59, 59, 999)
+                if (opDate > toDate) matchesDate = false
+            }
+
+            return matchesSearch && matchesDate
         })
-    }
-
-    const filteredOperations = operations.filter(op => {
-        // Text search
-        const searchLower = searchQuery.toLowerCase()
-        const matchesSearch = !searchQuery ||
-            (op.beneficiary_name && op.beneficiary_name.toLowerCase().includes(searchLower)) ||
-            (op.reference_number && op.reference_number.toLowerCase().includes(searchLower)) ||
-            (op.amount_numeric && op.amount_numeric.includes(searchQuery))
-
-        // Date filter
-        let matchesDate = true
-        if (dateFilter.from) {
-            const opDate = new Date(op.created_at)
-            const fromDate = new Date(dateFilter.from)
-            if (opDate < fromDate) matchesDate = false
-        }
-        if (dateFilter.to) {
-            const opDate = new Date(op.created_at)
-            const toDate = new Date(dateFilter.to)
-            toDate.setHours(23, 59, 59, 999)
-            if (opDate > toDate) matchesDate = false
-        }
-
-        return matchesSearch && matchesDate
-    })
+    }, [operations, searchQuery, dateFilter])
 
     const handleDelete = async (id) => {
         if (!confirm('Êtes-vous sûr de vouloir supprimer cette opération ?')) {
