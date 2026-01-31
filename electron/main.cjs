@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -82,6 +82,25 @@ function createWindow() {
 
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
+  });
+
+  // Security: Block new windows
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith('https:')) {
+      shell.openExternal(url);
+    }
+    return { action: 'deny' };
+  });
+
+  // Security: Block navigation to external sites
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    const isLocal = url.startsWith('http://localhost') || url.startsWith('file://');
+    if (!isLocal) {
+      event.preventDefault();
+      if (url.startsWith('https:')) {
+        shell.openExternal(url);
+      }
+    }
   });
 }
 
