@@ -111,7 +111,7 @@ function HistoryPage() {
             style: 'decimal',
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
-        }).format(amount).replace(/,/g, ' ').replace('.', ',')
+        }).format(amount).replace(/[\u202F\u00A0]/g, ' ')
     }
 
     return (

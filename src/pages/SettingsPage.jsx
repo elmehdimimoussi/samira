@@ -5,8 +5,8 @@ import { Card, CardHeader, CardTitle, CardBody } from '../components/ui/Card'
 import { Input } from '../components/ui/Input'
 import { Accordion, AccordionItem } from '../components/ui/Accordion'
 import {
-    Settings, Layout, Save, Download, Upload, Monitor, FileText,
-    Printer, Grid, RefreshCw, Plus, Trash2, Move, Type,
+    Settings, Layout, Save, Download, Upload, FileText,
+    Printer, Grid, Plus, Trash2, Type,
     AlignLeft, AlignCenter, AlignRight, Eye, EyeOff
 } from 'lucide-react'
 

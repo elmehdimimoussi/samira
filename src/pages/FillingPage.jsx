@@ -418,12 +418,15 @@ function FillingPage() {
                                                 onBlur={() => setTimeout(() => setShowAutocomplete(false), 200)}
                                             />
                                             {showAutocomplete && (
-                                                <div className="autocomplete-dropdown">
+                                                <div className="autocomplete-dropdown" role="listbox">
                                                     {filteredCustomers.map((customer) => (
                                                         <div
                                                             key={customer.id}
                                                             className="autocomplete-item"
+                                                            role="option"
                                                             onClick={() => selectCustomer(customer)}
+                                                            onKeyDown={(e) => { if (e.key === 'Enter') selectCustomer(customer) }}
+                                                            tabIndex={0}
                                                         >
                                                             <div className="autocomplete-item-name">{customer.name}</div>
                                                             {customer.address && (
