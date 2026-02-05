@@ -1,4 +1,4 @@
-import React, { forwardRef, useId } from 'react';
+import { forwardRef, useId } from 'react';
 
 export const Input = forwardRef(({
     label,
@@ -32,6 +32,8 @@ export const Input = forwardRef(({
     );
 });
 
+Input.displayName = 'Input';
+
 export const Textarea = forwardRef(({
     label,
     error,
@@ -59,3 +61,5 @@ export const Textarea = forwardRef(({
         </div>
     );
 });
+
+Textarea.displayName = 'Textarea';

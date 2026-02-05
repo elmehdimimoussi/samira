@@ -33,7 +33,7 @@ function convertTens(n) {
     if (ten === 7 || ten === 9) {
         // 70-79 uses soixante-dix, 90-99 uses quatre-vingt-dix
         const base = ten === 7 ? 'soixante' : 'quatre-vingt';
-        const remainder = (ten === 7 ? 10 : 10) + unit;
+        const remainder = 10 + unit;
 
         if (remainder === 11 && ten === 7) {
             return 'soixante et onze';
