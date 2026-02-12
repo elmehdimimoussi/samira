@@ -86,6 +86,10 @@ function FillingPage() {
                             enabled: Boolean(f.enabled),
                             wrap_enabled: Boolean(f.wrap_enabled),
                             center_enabled: Boolean(f.center_enabled),
+                            font_family: f.font_family || 'Arial',
+                            font_weight: f.font_weight || 'bold',
+                            font_style: f.font_style || 'normal',
+                            color: f.color || '#000000',
                         })))
                     }
                 }
@@ -259,7 +263,21 @@ function FillingPage() {
                 scale: 2,
                 useCORS: true,
                 logging: false,
-                backgroundColor: null
+                backgroundColor: null,
+                width: imageDimensions.width,
+                height: imageDimensions.height,
+                onclone: (clonedDoc) => {
+                    const clonedPreview = clonedDoc.getElementById('preview-container')
+                    if (!clonedPreview) return
+                    let parent = clonedPreview.parentElement
+                    while (parent) {
+                        if (parent.style.transform && parent.style.transform.includes('scale')) {
+                            parent.style.transform = 'none'
+                            break
+                        }
+                        parent = parent.parentElement
+                    }
+                }
             })
 
             const imgData = canvas.toDataURL('image/png')
@@ -701,8 +719,8 @@ function FillingPage() {
                                                     width: `${frame.width}px`,
                                                     height: `${frame.height}px`,
                                                     fontSize: `${frame.font_size || 12}px`,
-                                                    fontFamily: frame.font_family || frame.fontFamily || 'Arial',
-                                                    fontWeight: frame.font_weight || frame.fontWeight || 'bold',
+                                                    fontFamily: frame.font_family || 'Arial',
+                                                    fontWeight: frame.font_weight || 'bold',
                                                     fontStyle: frame.font_style || 'normal',
                                                     textAlign: frame.text_align || 'left',
                                                     justifyContent: (frame.center_enabled) ? 'center' : 'flex-start',
