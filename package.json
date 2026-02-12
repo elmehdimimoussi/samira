@@ -14,9 +14,9 @@
     "preview": "vite preview",
     "electron": "electron .",
     "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5174 && node launch-electron.js\"",
-    "electron:build": "node scripts/create-png-icon.js && vite build && electron-builder --win",
-    "electron:build:portable": "node scripts/create-png-icon.js && vite build && electron-builder --win portable",
-    "electron:build:installer": "node scripts/create-png-icon.js && vite build && electron-builder --win nsis",
+    "electron:build": "node scripts/generate-icons.js && vite build && electron-builder --win",
+    "electron:build:portable": "node scripts/generate-icons.js && vite build && electron-builder --win portable",
+    "electron:build:installer": "node scripts/generate-icons.js && vite build && electron-builder --win nsis",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -100,16 +100,16 @@
           ]
         }
       ],
-      "icon": "build/icon.ico",
+      "icon": "build/icon.png",
       "requestedExecutionLevel": "asInvoker"
     },
     "nsis": {
       "oneClick": false,
       "perMachine": false,
       "allowToChangeInstallationDirectory": true,
-      "installerIcon": "build/icon.ico",
-      "uninstallerIcon": "build/icon.ico",
-      "installerHeaderIcon": "build/icon.ico",
+      "installerIcon": "build/icon.png",
+      "uninstallerIcon": "build/icon.png",
+      "installerHeaderIcon": "build/icon.png",
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "LC Pro",
@@ -118,7 +118,6 @@
       ],
       "language": "1036",
       "license": "LICENSE.txt",
-      "installerSidebar": null,
       "deleteAppDataOnUninstall": false,
       "menuCategory": "LC Pro"
     },

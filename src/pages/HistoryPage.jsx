@@ -41,7 +41,8 @@ function HistoryPage() {
         let thisMonthAmount = 0
 
         operations.forEach(op => {
-            const amount = parseFloat((op.amount_numeric || '0').replace(/\s/g, '').replace(',', '.'))
+            const parsed = parseFloat((op.amount_numeric || '0').replace(/\s/g, '').replace(',', '.'))
+            const amount = isNaN(parsed) ? 0 : parsed
             totalAmount += amount
 
             // Check if operation is from this month

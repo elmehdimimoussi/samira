@@ -197,6 +197,10 @@ function createMainWindow() {
         mainWindow.setOpacity(0);
         let opacity = 0;
         const fadeIn = setInterval(() => {
+          if (!mainWindow || mainWindow.isDestroyed()) {
+            clearInterval(fadeIn);
+            return;
+          }
           opacity += 0.1;
           if (opacity >= 1) {
             mainWindow.setOpacity(1);
@@ -329,118 +333,188 @@ app.on('window-all-closed', () => {
 
 // Customers
 ipcMain.handle('customers:getAll', () => {
-  return db.data.customers.sort((a, b) => a.name.localeCompare(b.name));
+  try {
+    return db.data.customers.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  } catch (error) {
+    console.error('Error in customers:getAll:', error);
+    return [];
+  }
 });
 
 ipcMain.handle('customers:search', (event, query) => {
-  const q = query.toLowerCase();
-  return db.data.customers.filter(c =>
-    c.name.toLowerCase().includes(q)
-  ).sort((a, b) => a.name.localeCompare(b.name));
+  try {
+    const q = (query || '').toLowerCase();
+    return db.data.customers.filter(c =>
+      (c.name || '').toLowerCase().includes(q)
+    ).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  } catch (error) {
+    console.error('Error in customers:search:', error);
+    return [];
+  }
 });
 
 ipcMain.handle('customers:add', (event, customer) => {
-  const newCustomer = {
-    id: db.getNextId('customers'),
-    ...customer,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  };
-  db.data.customers.push(newCustomer);
-  db.save();
-  return newCustomer;
+  try {
+    const newCustomer = {
+      id: db.getNextId('customers'),
+      ...customer,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    db.data.customers.push(newCustomer);
+    db.save();
+    return newCustomer;
+  } catch (error) {
+    console.error('Error in customers:add:', error);
+    return null;
+  }
 });
 
 ipcMain.handle('customers:update', (event, customer) => {
-  const index = db.data.customers.findIndex(c => c.id === customer.id);
-  if (index !== -1) {
-    db.data.customers[index] = {
-      ...db.data.customers[index],
-      ...customer,
-      updated_at: new Date().toISOString()
-    };
-    db.save();
-    return db.data.customers[index];
+  try {
+    const index = db.data.customers.findIndex(c => c.id === customer.id);
+    if (index !== -1) {
+      db.data.customers[index] = {
+        ...db.data.customers[index],
+        ...customer,
+        updated_at: new Date().toISOString()
+      };
+      db.save();
+      return db.data.customers[index];
+    }
+    return null;
+  } catch (error) {
+    console.error('Error in customers:update:', error);
+    return null;
   }
-  return null;
 });
 
 ipcMain.handle('customers:delete', (event, id) => {
-  db.data.customers = db.data.customers.filter(c => c.id !== id);
-  db.save();
-  return true;
+  try {
+    db.data.customers = db.data.customers.filter(c => c.id !== id);
+    db.save();
+    return true;
+  } catch (error) {
+    console.error('Error in customers:delete:', error);
+    return false;
+  }
 });
 
 // Operations
 ipcMain.handle('operations:getAll', () => {
-  return db.data.operations.sort((a, b) =>
-    new Date(b.created_at) - new Date(a.created_at)
-  );
+  try {
+    return db.data.operations.sort((a, b) =>
+      new Date(b.created_at || 0) - new Date(a.created_at || 0)
+    );
+  } catch (error) {
+    console.error('Error in operations:getAll:', error);
+    return [];
+  }
 });
 
 ipcMain.handle('operations:search', (event, filters) => {
-  let results = [...db.data.operations];
+  try {
+    let results = [...db.data.operations];
 
-  if (filters.beneficiary) {
-    const q = filters.beneficiary.toLowerCase();
-    results = results.filter(o =>
-      o.beneficiary_name && o.beneficiary_name.toLowerCase().includes(q)
-    );
-  }
-  if (filters.dateFrom) {
-    results = results.filter(o => o.creation_date >= filters.dateFrom);
-  }
-  if (filters.dateTo) {
-    results = results.filter(o => o.creation_date <= filters.dateTo);
-  }
+    if (filters.beneficiary) {
+      const q = filters.beneficiary.toLowerCase();
+      results = results.filter(o =>
+        o.beneficiary_name && o.beneficiary_name.toLowerCase().includes(q)
+      );
+    }
+    if (filters.dateFrom) {
+      results = results.filter(o => o.creation_date >= filters.dateFrom);
+    }
+    if (filters.dateTo) {
+      results = results.filter(o => o.creation_date <= filters.dateTo);
+    }
 
-  return results.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    return results.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+  } catch (error) {
+    console.error('Error in operations:search:', error);
+    return [];
+  }
 });
 
 ipcMain.handle('operations:add', (event, operation) => {
-  const newOperation = {
-    id: db.getNextId('operations'),
-    ...operation,
-    created_at: new Date().toISOString()
-  };
-  db.data.operations.push(newOperation);
-  db.save();
-  return newOperation;
+  try {
+    const newOperation = {
+      id: db.getNextId('operations'),
+      ...operation,
+      created_at: new Date().toISOString()
+    };
+    db.data.operations.push(newOperation);
+    db.save();
+    return newOperation;
+  } catch (error) {
+    console.error('Error in operations:add:', error);
+    return null;
+  }
 });
 
 ipcMain.handle('operations:delete', (event, id) => {
-  db.data.operations = db.data.operations.filter(o => o.id !== id);
-  db.save();
-  return true;
+  try {
+    db.data.operations = db.data.operations.filter(o => o.id !== id);
+    db.save();
+    return true;
+  } catch (error) {
+    console.error('Error in operations:delete:', error);
+    return false;
+  }
 });
 
 ipcMain.handle('operations:getById', (event, id) => {
-  return db.data.operations.find(o => o.id === id) || null;
+  try {
+    return db.data.operations.find(o => o.id === id) || null;
+  } catch (error) {
+    console.error('Error in operations:getById:', error);
+    return null;
+  }
 });
 
 // Template Frames
 ipcMain.handle('frames:getAll', () => {
-  return db.data.frames.sort((a, b) => (a.z_index || 0) - (b.z_index || 0));
+  try {
+    return db.data.frames.sort((a, b) => (a.z_index || 0) - (b.z_index || 0));
+  } catch (error) {
+    console.error('Error in frames:getAll:', error);
+    return [];
+  }
 });
 
 ipcMain.handle('frames:save', (event, frames) => {
-  db.data.frames = frames.map((frame, index) => ({
-    ...frame,
-    z_index: index
-  }));
-  db.save();
-  return true;
+  try {
+    db.data.frames = frames.map((frame, index) => ({
+      ...frame,
+      z_index: index
+    }));
+    db.save();
+    return true;
+  } catch (error) {
+    console.error('Error in frames:save:', error);
+    return false;
+  }
 });
 
 // Settings
 ipcMain.handle('settings:get', (event, key) => {
-  return db.data.settings[key] || null;
+  try {
+    return db.data.settings[key] || null;
+  } catch (error) {
+    console.error('Error in settings:get:', error);
+    return null;
+  }
 });
 
 ipcMain.handle('settings:set', (event, key, value) => {
-  db.data.settings[key] = value;
-  db.save();
-  return true;
+  try {
+    db.data.settings[key] = value;
+    db.save();
+    return true;
+  } catch (error) {
+    console.error('Error in settings:set:', error);
+    return false;
+  }
 });
 
 // Backup & Restore

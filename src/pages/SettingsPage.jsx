@@ -230,6 +230,11 @@ function SettingsPage() {
             toast.error('Veuillez sélectionner un fichier image')
             return
         }
+        const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5 MB
+        if (file.size > MAX_FILE_SIZE) {
+            toast.error('L\'image est trop volumineuse (max 5 Mo)')
+            return
+        }
         const reader = new FileReader()
         reader.onload = async (ev) => {
             const dataUrl = ev.target.result

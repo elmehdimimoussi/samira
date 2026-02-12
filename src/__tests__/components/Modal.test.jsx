@@ -100,6 +100,6 @@ describe('Modal', () => {
   it('restaure le scroll du body quand fermé', () => {
     const { rerender } = render(<Modal {...defaultProps} />)
     rerender(<Modal {...defaultProps} isOpen={false} />)
-    expect(document.body.style.overflow).toBe('unset')
+    expect(document.body.style.overflow).toBe('')
   })
 })
