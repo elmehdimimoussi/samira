@@ -446,7 +446,7 @@
 /* ═══════════════════════════════════════════ */
 .filling-layout {
   display: grid;
-  grid-template-columns: minmax(360px, 32%) 1fr;
+  grid-template-columns: minmax(300px, 25%) 1fr;
   gap: 1.5rem;
   height: 100%;
   overflow: hidden;
