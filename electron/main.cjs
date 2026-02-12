@@ -177,7 +177,9 @@ function createMainWindow() {
 
   const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
   if (isDev) {
-    mainWindow.loadURL('http://localhost:5174');
+    mainWindow.loadURL('http://localhost:5174').catch(err => {
+      console.error('Failed to load URL:', err);
+    });
     if (process.env.OPEN_DEVTOOLS === '1') {
       mainWindow.webContents.openDevTools();
     }
@@ -185,7 +187,21 @@ function createMainWindow() {
     mainWindow.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));
   }
 
+  // Fallback timeout in case ready-to-show never fires
+  const fallbackTimeout = setTimeout(() => {
+    console.log('Fallback: Showing main window after timeout');
+    if (splashWindow && !splashWindow.isDestroyed()) {
+      splashWindow.close();
+      splashWindow = null;
+    }
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.show();
+    }
+  }, 10000); // Show after 10 seconds max
+
   mainWindow.once('ready-to-show', () => {
+    clearTimeout(fallbackTimeout);
+    console.log('Main window ready to show');
     setTimeout(() => {
       if (splashWindow && !splashWindow.isDestroyed()) {
         splashWindow.close();
@@ -211,6 +227,10 @@ function createMainWindow() {
         }, 20);
       }
     }, 800);
+  });
+
+  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+    console.error('Failed to load:', errorCode, errorDescription);
   });
 
   mainWindow.on('close', (event) => {
