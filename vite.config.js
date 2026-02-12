@@ -23,5 +23,19 @@ export default defineConfig({
   server: {
     port: 5174,
     strictPort: true,
-  }
+  },
+  base: './',
+  build: {
+    outDir: 'dist',
+    emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          ui: ['lucide-react', 'sonner'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 600,
+  },
 })

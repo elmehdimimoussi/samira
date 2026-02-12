@@ -1,9 +1,11 @@
-const { spawn } = require('child_process');
-const path = require('path');
+import { spawn } from 'child_process';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import http from 'http';
+import electronPath from 'electron';
 
-// Disable GPU acceleration if needed (can fix some rendering issues)
-// const { app } = require('electron');
-// app.disableHardwareAcceleration();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const VITE_PORT = 5174;
 const WAIT_TIMEOUT = 30000; // 30 seconds
@@ -11,7 +13,6 @@ const WAIT_TIMEOUT = 30000; // 30 seconds
 // Check if dev server is ready
 function checkDevServer(url) {
   return new Promise((resolve, reject) => {
-    const http = require('http');
     const start = Date.now();
 
     const check = () => {
@@ -42,12 +43,11 @@ async function startElectron() {
     const isDev = process.env.NODE_ENV === 'development' || process.argv.includes('--dev');
 
     if (isDev) {
-      console.log('Waiting for Vite dev server...');
+      console.log(`Waiting for Vite dev server on port ${VITE_PORT}...`);
       await checkDevServer(`http://localhost:${VITE_PORT}`);
       console.log('Dev server ready, launching Electron...');
     }
 
-    const electronPath = require('electron');
     const mainPath = path.join(__dirname, 'electron/main.cjs');
 
     // Pass arguments to the child process
@@ -60,7 +60,7 @@ async function startElectron() {
     });
 
     child.on('close', (code) => {
-      process.exit(code);
+      process.exit(code ?? 0);
     });
 
   } catch (error) {

@@ -14,6 +14,13 @@ dist-electron
 release
 *.local
 
+# Generated icons (keep icon.svg source)
+build/icon-*.png
+build/icon.ico
+build/splash-icon.png
+public/icon.ico
+public/icon.png
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

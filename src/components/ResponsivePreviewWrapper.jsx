@@ -16,8 +16,8 @@ export const ResponsivePreviewWrapper = ({ children, width, height, zoomMultipli
             if (!container) return;
 
             const parentWidth = container.clientWidth;
-            // Subtract passing to avoid scrollbars
-            const availableWidth = parentWidth - 48; // increased padding slightly
+            // Subtract a small padding to avoid scrollbars
+            const availableWidth = parentWidth - 16;
 
             const newScale = availableWidth / width;
             setBaseScale(newScale);
@@ -35,31 +35,38 @@ export const ResponsivePreviewWrapper = ({ children, width, height, zoomMultipli
 
     // Apply manual zoom multiplier to the base "fit-width" scale
     const finalScale = baseScale * zoomMultiplier;
+    
+    // Calculate the actual visual size after scaling
+    const scaledWidth = width * finalScale;
+    const scaledHeight = height * finalScale;
 
     return (
         <div
             ref={containerRef}
-            style={{
-                width: '100%',
-                height: '100%',
-                display: 'flex',
-                alignItems: 'flex-start',
-                justifyContent: 'center',
-                overflow: 'auto', // Allow scrolling if zoomed in
-                paddingTop: '20px'
-            }}
+            className="w-full h-full flex items-start justify-center overflow-auto no-scrollbar"
+            style={{ paddingTop: '20px', paddingBottom: '20px' }}
         >
             <div
                 style={{
-                    width: `${width}px`,
-                    height: `${height}px`,
-                    transform: `scale(${finalScale})`,
-                    transformOrigin: 'top center',
-                    flexShrink: 0,
-                    marginBottom: `${height * (finalScale - 1) + 100}px` // Add margin to scroll to bottom if needed
+                    width: `${scaledWidth}px`,
+                    height: `${scaledHeight}px`,
+                    position: 'relative',
+                    flexShrink: 0  // Prevent flexbox from squishing it
                 }}
             >
-                {children}
+                <div
+                    style={{
+                        width: `${width}px`,
+                        height: `${height}px`,
+                        transform: `scale(${finalScale})`,
+                        transformOrigin: 'top left',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                    }}
+                >
+                    {children}
+                </div>
             </div>
         </div>
     );

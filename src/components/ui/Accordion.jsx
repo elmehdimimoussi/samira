@@ -1,4 +1,4 @@
-import { useState, createContext, useContext, useRef, useEffect } from 'react'
+import { useState, createContext, useContext, useRef, useEffect, useCallback } from 'react'
 import { ChevronDown } from 'lucide-react'
 
 const AccordionContext = createContext({})
@@ -43,27 +43,36 @@ export function AccordionItem({ value: itemValue, title, children, className = "
     const [overflow, setOverflow] = useState('hidden')
 
     useEffect(() => {
-        if (isOpen) {
+        if (isOpen && contentRef.current) {
             const contentEl = contentRef.current
             setHeight(contentEl.scrollHeight)
             const timer = setTimeout(() => setOverflow('visible'), 300)
-            return () => clearTimeout(timer)
+
+            const observer = new ResizeObserver(() => {
+                setHeight(contentEl.scrollHeight)
+            })
+            observer.observe(contentEl)
+
+            return () => {
+                clearTimeout(timer)
+                observer.disconnect()
+            }
         } else {
             setOverflow('hidden')
             setHeight(0)
         }
-    }, [isOpen, children])
+    }, [isOpen])
 
     return (
-        <div className={`bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm transition-all duration-200 ${isOpen ? 'ring-2 ring-blue-500/20 border-blue-500/50' : ''} ${className}`}>
+        <div className={`bg-white dark:bg-slate-800/80 rounded-xl border border-slate-200/80 dark:border-slate-700/70 transition-all duration-200 ${isOpen ? 'ring-2 ring-blue-500/15 border-blue-200 dark:border-blue-800/50 shadow-sm' : 'hover:border-slate-300 dark:hover:border-slate-600'} ${className}`}>
             <button
                 type="button"
                 onClick={() => onValueChange(itemValue)}
-                className="w-full flex items-center justify-between p-4 text-left hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors"
+                className="w-full flex items-center justify-between p-4 text-left hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-colors rounded-xl cursor-pointer group"
             >
-                <span className="font-semibold text-slate-700 dark:text-slate-200">{title}</span>
+                <span className={`font-semibold text-sm transition-colors ${isOpen ? 'text-blue-700 dark:text-blue-400' : 'text-slate-700 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-white'}`}>{title}</span>
                 <ChevronDown
-                    className={`w-5 h-5 text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180 text-blue-500' : ''}`}
+                    className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180 text-blue-500' : 'text-slate-400'}`}
                 />
             </button>
             <div

@@ -1,0 +1,35 @@
+CONTRAT DE LICENCE UTILISATEUR FINAL
+
+LC Pro — Gestionnaire de Lettres de Change
+Copyright (c) 2026 IGADOR SAMIRA. Tous droits réservés.
+
+IMPORTANT : VEUILLEZ LIRE ATTENTIVEMENT CE CONTRAT DE LICENCE AVANT D'INSTALLER OU D'UTILISER CE LOGICIEL.
+
+1. OCTROI DE LICENCE
+Ce contrat de licence vous accorde le droit d'installer et d'utiliser le logiciel 
+"LC Pro" (ci-après "le Logiciel") sur un ordinateur unique pour un usage professionnel 
+dans le cadre de la gestion de lettres de change.
+
+2. RESTRICTIONS
+Vous ne pouvez pas :
+- Redistribuer, vendre ou sous-licencier le Logiciel sans autorisation écrite.
+- Modifier, désassembler ou décompiler le Logiciel.
+- Utiliser le Logiciel à des fins illégales.
+
+3. PROPRIÉTÉ INTELLECTUELLE
+Le Logiciel et tous les droits de propriété intellectuelle associés sont la propriété 
+exclusive de IGADOR SAMIRA.
+
+4. LIMITATION DE RESPONSABILITÉ
+LE LOGICIEL EST FOURNI "EN L'ÉTAT", SANS GARANTIE D'AUCUNE SORTE. L'AUTEUR NE SERA 
+EN AUCUN CAS TENU RESPONSABLE DE TOUT DOMMAGE RÉSULTANT DE L'UTILISATION DU LOGICIEL.
+
+5. VOS DONNÉES
+Le Logiciel stocke toutes les données localement sur votre ordinateur. 
+Aucune donnée n'est envoyée à des serveurs externes.
+
+6. RÉSILIATION
+Cette licence est effective jusqu'à sa résiliation. Elle sera résiliée automatiquement 
+si vous ne respectez pas les termes de ce contrat.
+
+En installant le Logiciel, vous acceptez les termes de ce contrat de licence.

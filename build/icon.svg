@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1e40af"/>
+      <stop offset="50%" style="stop-color:#2563eb"/>
+      <stop offset="100%" style="stop-color:#3b82f6"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:rgba(255,255,255,0.3)"/>
+      <stop offset="100%" style="stop-color:rgba(255,255,255,0)"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#1e3a5f" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+  
+  <!-- Background rounded square -->
+  <rect x="32" y="32" width="448" height="448" rx="80" ry="80" fill="url(#bg)" filter="url(#shadow)"/>
+  
+  <!-- Shine overlay -->
+  <rect x="32" y="32" width="448" height="224" rx="80" ry="80" fill="url(#shine)" opacity="0.5"/>
+  
+  <!-- Document icon (Lettre de Change) -->
+  <g transform="translate(130, 100)">
+    <!-- Main document -->
+    <rect x="0" y="0" width="180" height="230" rx="12" fill="white" opacity="0.95"/>
+    <!-- Document fold -->
+    <path d="M 140 0 L 180 40 L 140 40 Z" fill="#bfdbfe" opacity="0.8"/>
+    
+    <!-- Lines on document -->
+    <rect x="24" y="55" width="130" height="8" rx="4" fill="#93c5fd" opacity="0.6"/>
+    <rect x="24" y="78" width="100" height="8" rx="4" fill="#93c5fd" opacity="0.4"/>
+    <rect x="24" y="101" width="115" height="8" rx="4" fill="#93c5fd" opacity="0.5"/>
+    <rect x="24" y="124" width="80" height="8" rx="4" fill="#93c5fd" opacity="0.3"/>
+    
+    <!-- Amount box -->
+    <rect x="24" y="155" width="130" height="40" rx="8" fill="#dbeafe" stroke="#93c5fd" stroke-width="2"/>
+    <text x="89" y="182" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#1e40af">MAD</text>
+  </g>
+  
+  <!-- Second document (offset behind) -->
+  <g transform="translate(160, 130)" opacity="0.4">
+    <rect x="0" y="0" width="180" height="230" rx="12" fill="white"/>
+  </g>
+  
+  <!-- Checkmark circle -->
+  <g transform="translate(310, 280)">
+    <circle cx="40" cy="40" r="40" fill="#22c55e"/>
+    <path d="M 20 40 L 35 55 L 60 25" stroke="white" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  
+  <!-- LC text badge -->
+  <g transform="translate(96, 350)">
+    <rect x="0" y="0" width="80" height="42" rx="10" fill="white" opacity="0.95"/>
+    <text x="40" y="30" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="#1e40af">LC</text>
+  </g>
+</svg>

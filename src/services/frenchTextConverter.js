@@ -173,7 +173,10 @@ export function convertAmountToFrench(amount) {
     } else if (dirhams === 1) {
         result = 'Un dirham';
     } else {
-        result = capitalizeFirst(numberToFrench(dirhams)) + ' dirhams';
+        const text = numberToFrench(dirhams);
+        // En français, "million(s)" et "milliard(s)" sont suivis de "de" devant un nom
+        const needsDe = /millions?$|milliards?$/.test(text);
+        result = capitalizeFirst(text) + (needsDe ? ' de dirhams' : ' dirhams');
     }
 
     // Centimes part

@@ -1,11 +1,45 @@
-const { app, BrowserWindow, ipcMain, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, Tray, Menu, nativeImage, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
-let mainWindow;
-let db = null;
+// ─── Configuration ──────────────────────────────────────────────────
+const APP_CONFIG = {
+  name: 'LC Pro',
+  width: 1400,
+  height: 900,
+  minWidth: 1200,
+  minHeight: 700,
+  splashWidth: 420,
+  splashHeight: 320,
+};
 
-// Simple JSON-based database
+let mainWindow = null;
+let splashWindow = null;
+let tray = null;
+let db = null;
+let isQuitting = false;
+
+// ─── Single Instance Lock ───────────────────────────────────────────
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.focus();
+    }
+  });
+}
+
+// ─── App Metadata ───────────────────────────────────────────────────
+app.setAppUserModelId('com.igador.lcbmci');
+if (process.platform === 'win32') {
+  app.setName(APP_CONFIG.name);
+}
+
+// ─── JSON Database ──────────────────────────────────────────────────
 class JsonDatabase {
   constructor(filePath) {
     this.filePath = filePath;
@@ -23,9 +57,18 @@ class JsonDatabase {
       if (fs.existsSync(this.filePath)) {
         const content = fs.readFileSync(this.filePath, 'utf8');
         this.data = JSON.parse(content);
+        this.data.customers = this.data.customers || [];
+        this.data.operations = this.data.operations || [];
+        this.data.frames = this.data.frames || [];
+        this.data.settings = this.data.settings || {};
       }
     } catch (error) {
       console.error('Error loading database:', error);
+      if (fs.existsSync(this.filePath)) {
+        const backupPath = this.filePath + '.backup-' + Date.now();
+        fs.copyFileSync(this.filePath, backupPath);
+        console.log('Backup created at:', backupPath);
+      }
     }
   }
 
@@ -35,20 +78,21 @@ class JsonDatabase {
       if (!fs.existsSync(dir)) {
         fs.mkdirSync(dir, { recursive: true });
       }
-      fs.writeFileSync(this.filePath, JSON.stringify(this.data, null, 2), 'utf8');
+      const tempPath = this.filePath + '.tmp';
+      fs.writeFileSync(tempPath, JSON.stringify(this.data, null, 2), 'utf8');
+      fs.renameSync(tempPath, this.filePath);
     } catch (error) {
       console.error('Error saving database:', error);
     }
   }
 
-  // Auto-increment ID helper
   getNextId(collection) {
     const items = this.data[collection] || [];
     return items.length > 0 ? Math.max(...items.map(i => i.id)) + 1 : 1;
   }
 }
 
-// Database initialization
+// ─── Database Initialization ────────────────────────────────────────
 function initDatabase() {
   const userDataPath = app.getPath('userData');
   const dbPath = path.join(userDataPath, 'lc-bmci-data.json');
@@ -56,35 +100,126 @@ function initDatabase() {
   console.log('Database initialized at:', dbPath);
 }
 
-function createWindow() {
+// ─── Get Icon Path ──────────────────────────────────────────────────
+function getIconPath() {
+  if (app.isPackaged) {
+    const icoPath = path.join(process.resourcesPath, 'build', 'icon.ico');
+    const pngPath = path.join(process.resourcesPath, 'build', 'icon.png');
+    if (fs.existsSync(icoPath)) return icoPath;
+    if (fs.existsSync(pngPath)) return pngPath;
+    return path.join(__dirname, '..', 'build', 'icon.ico');
+  }
+  const devIco = path.join(__dirname, '..', 'build', 'icon.ico');
+  const devPng = path.join(__dirname, '..', 'build', 'icon.png');
+  const devSvg = path.join(__dirname, '..', 'build', 'icon.svg');
+  if (fs.existsSync(devIco)) return devIco;
+  if (fs.existsSync(devPng)) return devPng;
+  if (fs.existsSync(devSvg)) return devSvg;
+  return undefined;
+}
+
+// ─── Splash Screen ──────────────────────────────────────────────────
+function createSplashWindow() {
+  const iconPath = getIconPath();
+
+  splashWindow = new BrowserWindow({
+    width: APP_CONFIG.splashWidth,
+    height: APP_CONFIG.splashHeight,
+    frame: false,
+    transparent: true,
+    resizable: false,
+    movable: false,
+    center: true,
+    alwaysOnTop: true,
+    skipTaskbar: true,
+    show: false,
+    icon: iconPath,
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+    }
+  });
+
+  splashWindow.loadFile(path.join(__dirname, 'splash.html'));
+
+  splashWindow.once('ready-to-show', () => {
+    splashWindow.show();
+  });
+
+  splashWindow.on('close', (e) => {
+    if (!isQuitting && mainWindow && !mainWindow.isVisible()) {
+      e.preventDefault();
+    }
+  });
+}
+
+// ─── Main Window ────────────────────────────────────────────────────
+function createMainWindow() {
+  const iconPath = getIconPath();
+
   mainWindow = new BrowserWindow({
-    width: 1400,
-    height: 900,
-    minWidth: 1200,
-    minHeight: 700,
+    width: APP_CONFIG.width,
+    height: APP_CONFIG.height,
+    minWidth: APP_CONFIG.minWidth,
+    minHeight: APP_CONFIG.minHeight,
+    icon: iconPath,
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
-      nodeIntegration: false
+      nodeIntegration: false,
+      sandbox: false,
     },
     titleBarStyle: 'default',
-    show: false
+    title: APP_CONFIG.name,
+    show: false,
+    backgroundColor: '#0f172a',
   });
 
-  // In development, load from Vite dev server
-  if (process.env.NODE_ENV === 'development' || !app.isPackaged) {
+  const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
+  if (isDev) {
     mainWindow.loadURL('http://localhost:5174');
-    mainWindow.webContents.openDevTools();
+    if (process.env.OPEN_DEVTOOLS === '1') {
+      mainWindow.webContents.openDevTools();
+    }
   } else {
-    // In production, load the built files
-    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
+    mainWindow.loadFile(path.join(__dirname, '..', 'dist', 'index.html'));
   }
 
   mainWindow.once('ready-to-show', () => {
-    mainWindow.show();
+    setTimeout(() => {
+      if (splashWindow && !splashWindow.isDestroyed()) {
+        splashWindow.close();
+        splashWindow = null;
+      }
+      mainWindow.show();
+
+      if (process.platform === 'win32') {
+        mainWindow.setOpacity(0);
+        let opacity = 0;
+        const fadeIn = setInterval(() => {
+          opacity += 0.1;
+          if (opacity >= 1) {
+            mainWindow.setOpacity(1);
+            clearInterval(fadeIn);
+          } else {
+            mainWindow.setOpacity(opacity);
+          }
+        }, 20);
+      }
+    }, 800);
   });
 
-  // Security: Block new windows
+  mainWindow.on('close', (event) => {
+    if (!isQuitting) {
+      event.preventDefault();
+      mainWindow.hide();
+    }
+  });
+
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+  });
+
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith('https:')) {
       shell.openExternal(url);
@@ -92,7 +227,6 @@ function createWindow() {
     return { action: 'deny' };
   });
 
-  // Security: Block navigation to external sites
   mainWindow.webContents.on('will-navigate', (event, url) => {
     const isLocal = url.startsWith('http://localhost') || url.startsWith('file://');
     if (!isLocal) {
@@ -104,15 +238,85 @@ function createWindow() {
   });
 }
 
+// ─── System Tray ────────────────────────────────────────────────────
+function createTray() {
+  const iconPath = getIconPath();
+  if (!iconPath) return;
+
+  try {
+    let trayIcon = nativeImage.createFromPath(iconPath);
+
+    if (!trayIcon.isEmpty()) {
+      trayIcon = trayIcon.resize({ width: 16, height: 16 });
+    }
+
+    tray = new Tray(trayIcon);
+    tray.setToolTip('LC Pro — Gestionnaire de Lettres de Change');
+
+    const contextMenu = Menu.buildFromTemplate([
+      {
+        label: 'Ouvrir LC Pro',
+        click: () => {
+          if (mainWindow) {
+            mainWindow.show();
+            mainWindow.focus();
+          }
+        }
+      },
+      { type: 'separator' },
+      {
+        label: 'À propos',
+        click: () => {
+          dialog.showMessageBox(mainWindow || null, {
+            type: 'info',
+            title: 'À propos de LC Pro',
+            message: 'LC Pro — Gestionnaire de Lettres de Change',
+            detail: `Version: ${app.getVersion()}\nAuteur: IGADOR SAMIRA\n\nApplication de gestion de lettres de change BMCI.`,
+            buttons: ['OK']
+          });
+        }
+      },
+      { type: 'separator' },
+      {
+        label: 'Quitter',
+        click: () => {
+          isQuitting = true;
+          app.quit();
+        }
+      }
+    ]);
+
+    tray.setContextMenu(contextMenu);
+
+    tray.on('double-click', () => {
+      if (mainWindow) {
+        mainWindow.show();
+        mainWindow.focus();
+      }
+    });
+  } catch (error) {
+    console.warn('Could not create tray icon:', error.message);
+  }
+}
+
+// ─── App Lifecycle ──────────────────────────────────────────────────
 app.whenReady().then(() => {
   initDatabase();
-  createWindow();
+  createSplashWindow();
+  createTray();
+  createMainWindow();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
+      createMainWindow();
+    } else if (mainWindow) {
+      mainWindow.show();
     }
   });
+});
+
+app.on('before-quit', () => {
+  isQuitting = true;
 });
 
 app.on('window-all-closed', () => {
@@ -121,7 +325,7 @@ app.on('window-all-closed', () => {
   }
 });
 
-// IPC Handlers for database operations
+// ─── IPC Handlers ───────────────────────────────────────────────────
 
 // Customers
 ipcMain.handle('customers:getAll', () => {
@@ -272,4 +476,13 @@ ipcMain.handle('operations:generateRef', () => {
   ).length;
 
   return `${prefix}${String(existingCount + 1).padStart(4, '0')}`;
+});
+
+// App info
+ipcMain.handle('app:getVersion', () => {
+  return app.getVersion();
+});
+
+ipcMain.handle('app:getPath', (event, name) => {
+  return app.getPath(name);
 });
