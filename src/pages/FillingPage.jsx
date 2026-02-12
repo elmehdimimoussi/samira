@@ -10,8 +10,8 @@ import { ConfirmModal } from '../components/ui/ConfirmModal'
 import { ResponsivePreviewWrapper } from '../components/ResponsivePreviewWrapper'
 import { Maximize2, Minimize2, Printer, Save, FileText, ZoomIn, ZoomOut, ArrowRight, CheckCircle2, Check, CircleDot, Circle, RotateCcw } from 'lucide-react'
 
-// Template image path
-const templateImage = '/assets/templates/bmci-template.jpg'
+// Default template image path
+const DEFAULT_TEMPLATE_IMAGE = '/assets/templates/bmci-template.jpg'
 
 const SECTIONS = ['general', 'tireur', 'beneficiary', 'drawer', 'footer']
 
@@ -59,6 +59,7 @@ function FillingPage() {
     const [frames, setFrames] = useState([])
     const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0 })
     const [showResetConfirm, setShowResetConfirm] = useState(false)
+    const [templateImage, setTemplateImage] = useState(DEFAULT_TEMPLATE_IMAGE)
 
     const drawerNameId = useId()
 
@@ -90,6 +91,17 @@ function FillingPage() {
                 }
             } catch (error) {
                 console.error('Error loading frames:', error)
+            }
+        }
+
+        const loadTemplateImage = async () => {
+            try {
+                if (window.electronAPI?.settings?.get) {
+                    const savedImage = await window.electronAPI.settings.get('templateImage')
+                    if (savedImage) setTemplateImage(savedImage)
+                }
+            } catch (error) {
+                console.error('Error loading template image:', error)
             }
         }
 
@@ -133,6 +145,7 @@ function FillingPage() {
 
         loadCustomers()
         loadFrames()
+        loadTemplateImage()
         checkClonedOperation()
     }, [])
 

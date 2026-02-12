@@ -353,8 +353,8 @@ function SettingsPage() {
         const rect = canvasRef.current.getBoundingClientRect()
         const currentX = e.clientX - rect.left
         const currentY = e.clientY - rect.top
-        const deltaX = currentX - dragStart.x
-        const deltaY = currentY - dragStart.y
+        const deltaX = (currentX - dragStart.x) / zoomLevel
+        const deltaY = (currentY - dragStart.y) / zoomLevel
 
         if (isDragging) {
             let newX = Math.max(0, dragStart.frameX + deltaX)
