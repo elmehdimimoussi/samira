@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardBody } from '../components/ui/Card'
 import { Input } from '../components/ui/Input'
 import { Accordion, AccordionItem } from '../components/ui/Accordion'
 import { ConfirmModal } from '../components/ui/ConfirmModal'
+import { ResponsivePreviewWrapper } from '../components/ResponsivePreviewWrapper'
 import {
     Settings, Layout, Save, Download, Upload, FileText,
     Printer, Grid, Plus, Trash2, Type,
@@ -106,9 +107,21 @@ function SettingsPage() {
     const [showShortcuts, setShowShortcuts] = useState(false)
     const [showResetConfirm, setShowResetConfirm] = useState(false)
     const [frameSearch, setFrameSearch] = useState('')
+    const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0 })
+    const [canvasScale, setCanvasScale] = useState(1)
 
     const canvasRef = useRef(null)
     const templateInputRef = useRef(null)
+    const isDev = import.meta.env.DEV
+
+    const getDocumentPoint = useCallback((event) => {
+        if (!canvasRef.current || !canvasScale) return { x: 0, y: 0 }
+        const rect = canvasRef.current.getBoundingClientRect()
+        return {
+            x: (event.clientX - rect.left) / canvasScale,
+            y: (event.clientY - rect.top) / canvasScale
+        }
+    }, [canvasScale])
 
     // Load frames from database on mount
     useEffect(() => {
@@ -323,7 +336,7 @@ function SettingsPage() {
     const handleMouseDown = (e, frame, handle = null) => {
         e.preventDefault()
         e.stopPropagation()
-        const rect = canvasRef.current.getBoundingClientRect()
+        const pointer = getDocumentPoint(e)
         if (handle) {
             setIsResizing(true)
             setResizeHandle(handle)
@@ -332,8 +345,8 @@ function SettingsPage() {
         }
         setSelectedFrame(frame)
         setDragStart({
-            x: e.clientX - rect.left,
-            y: e.clientY - rect.top,
+            x: pointer.x,
+            y: pointer.y,
             frameX: frame.x,
             frameY: frame.y,
             frameW: frame.width,
@@ -345,9 +358,9 @@ function SettingsPage() {
         if (!isDragging && !isResizing) return
         if (!selectedFrame) return
 
-        const rect = canvasRef.current.getBoundingClientRect()
-        const currentX = e.clientX - rect.left
-        const currentY = e.clientY - rect.top
+        const pointer = getDocumentPoint(e)
+        const currentX = pointer.x
+        const currentY = pointer.y
         const deltaX = currentX - dragStart.x
         const deltaY = currentY - dragStart.y
 
@@ -385,6 +398,13 @@ function SettingsPage() {
 
             updateFrame(selectedFrame.id, { x: newX, y: newY, width: newW, height: newH })
         }
+    }
+
+    const handleTemplateLoad = (e) => {
+        setImageDimensions({
+            width: e.target.naturalWidth,
+            height: e.target.naturalHeight
+        })
     }
 
     const handleMouseUp = () => {
@@ -608,74 +628,104 @@ function SettingsPage() {
                                 <span className="text-xs text-muted hidden lg:block">
                                     {frames.filter(f => f.enabled).length}/{frames.length} champs actifs
                                 </span>
+                                {isDev && (
+                                    <span className="text-xs px-2 py-1 rounded-md bg-slate-100 border border-slate-200 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300">
+                                        Scale {Math.round(canvasScale * 100)}%
+                                    </span>
+                                )}
                             </div>
 
                             {/* Canvas Area */}
                             <div className="designer-canvas-scroll flex-1 overflow-auto">
-                                <div
-                                    ref={canvasRef}
-                                    className="designer-canvas"
-                                    onMouseMove={handleMouseMove}
-                                    onMouseUp={handleMouseUp}
-                                    onMouseLeave={handleMouseUp}
-                                    onClick={() => setSelectedFrame(null)}
-                                    style={{
-                                        backgroundImage: showGrid
-                                            ? 'repeating-linear-gradient(0deg, rgba(0,0,0,0.1) 0px, transparent 1px, transparent 10px), repeating-linear-gradient(90deg, rgba(0,0,0,0.1) 0px, transparent 1px, transparent 10px)'
-                                            : 'none'
-                                    }}
-                                >
-                                    <img src={templateImage} alt="Template" style={{ display: 'block' }} />
+                                <img
+                                    src={templateImage}
+                                    onLoad={handleTemplateLoad}
+                                    style={{ display: 'none' }}
+                                    alt=""
+                                />
 
-                                    {frames.map((frame) => (
+                                {imageDimensions.width > 0 ? (
+                                    <ResponsivePreviewWrapper
+                                        width={imageDimensions.width}
+                                        height={imageDimensions.height}
+                                        onScaleChange={setCanvasScale}
+                                    >
                                         <div
-                                            key={frame.id}
-                                            className={`designer-frame ${selectedFrame?.id === frame.id ? 'selected' : ''} ${!frame.enabled ? 'disabled opacity-50' : ''}`}
+                                            ref={canvasRef}
+                                            className="designer-canvas"
+                                            onMouseMove={handleMouseMove}
+                                            onMouseUp={handleMouseUp}
+                                            onMouseLeave={handleMouseUp}
+                                            onClick={() => setSelectedFrame(null)}
                                             style={{
-                                                left: `${frame.x}px`,
-                                                top: `${frame.y}px`,
-                                                width: `${frame.width}px`,
-                                                height: `${frame.height}px`,
+                                                width: `${imageDimensions.width}px`,
+                                                height: `${imageDimensions.height}px`,
+                                                backgroundImage: showGrid
+                                                    ? 'repeating-linear-gradient(0deg, rgba(0,0,0,0.1) 0px, transparent 1px, transparent 10px), repeating-linear-gradient(90deg, rgba(0,0,0,0.1) 0px, transparent 1px, transparent 10px)'
+                                                    : 'none'
                                             }}
-                                            onMouseDown={(e) => handleMouseDown(e, frame)}
-                                            onClick={(e) => e.stopPropagation()}
                                         >
-                                            {!testMode && (
-                                                <span className="designer-frame-label">{frame.label}</span>
-                                            )}
-                                            {testMode && (
-                                                <span style={{
-                                                    fontSize: `${frame.font_size}px`,
-                                                    fontFamily: frame.font_family || 'Arial',
-                                                    fontWeight: frame.font_weight || 'bold',
-                                                    fontStyle: frame.font_style || 'normal',
-                                                    color: frame.color || '#000000',
-                                                    textAlign: frame.text_align,
-                                                    width: '100%',
-                                                    display: 'block',
-                                                    overflow: frame.wrap_enabled ? 'hidden' : 'visible',
-                                                    whiteSpace: frame.wrap_enabled ? 'normal' : 'nowrap',
-                                                    wordWrap: frame.wrap_enabled ? 'break-word' : 'normal',
-                                                    lineHeight: 1.2,
-                                                }}>
-                                                    {testData[frame.frame_type] || 'ABC...'}
-                                                </span>
-                                            )}
-                                            {selectedFrame?.id === frame.id && (
-                                                <>
-                                                    <div className="designer-frame-handle nw" onMouseDown={(e) => handleMouseDown(e, frame, 'nw')} />
-                                                    <div className="designer-frame-handle n" onMouseDown={(e) => handleMouseDown(e, frame, 'n')} />
-                                                    <div className="designer-frame-handle ne" onMouseDown={(e) => handleMouseDown(e, frame, 'ne')} />
-                                                    <div className="designer-frame-handle e" onMouseDown={(e) => handleMouseDown(e, frame, 'e')} />
-                                                    <div className="designer-frame-handle se" onMouseDown={(e) => handleMouseDown(e, frame, 'se')} />
-                                                    <div className="designer-frame-handle s" onMouseDown={(e) => handleMouseDown(e, frame, 's')} />
-                                                    <div className="designer-frame-handle sw" onMouseDown={(e) => handleMouseDown(e, frame, 'sw')} />
-                                                    <div className="designer-frame-handle w" onMouseDown={(e) => handleMouseDown(e, frame, 'w')} />
-                                                </>
-                                            )}
+                                            <img
+                                                src={templateImage}
+                                                alt="Template"
+                                                style={{ display: 'block', width: '100%', height: '100%', maxWidth: 'none' }}
+                                            />
+
+                                            {frames.map((frame) => (
+                                                <div
+                                                    key={frame.id}
+                                                    className={`designer-frame ${selectedFrame?.id === frame.id ? 'selected' : ''} ${!frame.enabled ? 'disabled opacity-50' : ''}`}
+                                                    style={{
+                                                        left: `${frame.x}px`,
+                                                        top: `${frame.y}px`,
+                                                        width: `${frame.width}px`,
+                                                        height: `${frame.height}px`,
+                                                    }}
+                                                    onMouseDown={(e) => handleMouseDown(e, frame)}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    {!testMode && (
+                                                        <span className="designer-frame-label">{frame.label}</span>
+                                                    )}
+                                                    {testMode && (
+                                                        <span style={{
+                                                            fontSize: `${frame.font_size}px`,
+                                                            fontFamily: frame.font_family || 'Arial',
+                                                            fontWeight: frame.font_weight || 'bold',
+                                                            fontStyle: frame.font_style || 'normal',
+                                                            color: frame.color || '#000000',
+                                                            textAlign: frame.text_align,
+                                                            width: '100%',
+                                                            display: 'block',
+                                                            overflow: frame.wrap_enabled ? 'hidden' : 'visible',
+                                                            whiteSpace: frame.wrap_enabled ? 'normal' : 'nowrap',
+                                                            wordWrap: frame.wrap_enabled ? 'break-word' : 'normal',
+                                                            lineHeight: 1.2,
+                                                        }}>
+                                                            {testData[frame.frame_type] || 'ABC...'}
+                                                        </span>
+                                                    )}
+                                                    {selectedFrame?.id === frame.id && (
+                                                        <>
+                                                            <div className="designer-frame-handle nw" onMouseDown={(e) => handleMouseDown(e, frame, 'nw')} />
+                                                            <div className="designer-frame-handle n" onMouseDown={(e) => handleMouseDown(e, frame, 'n')} />
+                                                            <div className="designer-frame-handle ne" onMouseDown={(e) => handleMouseDown(e, frame, 'ne')} />
+                                                            <div className="designer-frame-handle e" onMouseDown={(e) => handleMouseDown(e, frame, 'e')} />
+                                                            <div className="designer-frame-handle se" onMouseDown={(e) => handleMouseDown(e, frame, 'se')} />
+                                                            <div className="designer-frame-handle s" onMouseDown={(e) => handleMouseDown(e, frame, 's')} />
+                                                            <div className="designer-frame-handle sw" onMouseDown={(e) => handleMouseDown(e, frame, 'sw')} />
+                                                            <div className="designer-frame-handle w" onMouseDown={(e) => handleMouseDown(e, frame, 'w')} />
+                                                        </>
+                                                    )}
+                                                </div>
+                                            ))}
                                         </div>
-                                    ))}
-                                </div>
+                                    </ResponsivePreviewWrapper>
+                                ) : (
+                                    <div className="flex h-full items-center justify-center text-sm text-slate-500 dark:text-slate-400">
+                                        Chargement du modèle...
+                                    </div>
+                                )}
                             </div>
 
                             {/* Canvas Footer Info */}

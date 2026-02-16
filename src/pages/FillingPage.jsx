@@ -59,8 +59,10 @@ function FillingPage() {
     const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0 })
     const [showResetConfirm, setShowResetConfirm] = useState(false)
     const [templateImage, setTemplateImage] = useState(DEFAULT_TEMPLATE_IMAGE)
+    const [previewScale, setPreviewScale] = useState(1)
 
     const drawerNameId = useId()
+    const isDev = import.meta.env.DEV
 
     // Load initial data
     useEffect(() => {
@@ -659,6 +661,11 @@ function FillingPage() {
                             <div className="flex items-center gap-2">
                                 <span className="preview-title">Aperçu</span>
                                 <span className="badge badge-primary">BMCI</span>
+                                {isDev && (
+                                    <span className="badge bg-slate-100 text-slate-600 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
+                                        Scale {Math.round(previewScale * 100)}%
+                                    </span>
+                                )}
                             </div>
                             <div className="flex items-center gap-1">
                                 <Button variant="ghost" size="sm" onClick={toggleExpand}>
@@ -678,6 +685,7 @@ function FillingPage() {
                                 <ResponsivePreviewWrapper
                                     width={imageDimensions.width}
                                     height={imageDimensions.height}
+                                    onScaleChange={setPreviewScale}
                                 >
                                     <div
                                         id="preview-container"
