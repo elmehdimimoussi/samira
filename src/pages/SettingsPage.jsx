@@ -9,7 +9,7 @@ import {
     Settings, Layout, Save, Download, Upload, FileText,
     Printer, Grid, Plus, Trash2, Type,
     AlignLeft, AlignCenter, AlignRight, Eye, EyeOff,
-    ZoomIn, ZoomOut, Copy, RotateCcw, Keyboard, Image,
+    Copy, RotateCcw, Keyboard, Image,
     Bold, Italic, Palette, AlignVerticalJustifyCenter,
     ChevronDown, FileDown, FileUp, Info, Move
 } from 'lucide-react'
@@ -102,7 +102,6 @@ function SettingsPage() {
     const [showGrid, setShowGrid] = useState(false)
     const [testMode, setTestMode] = useState(false)
     const [confirmDeleteId, setConfirmDeleteId] = useState(null)
-    const [zoomLevel, setZoomLevel] = useState(1)
     const [templateImage, setTemplateImage] = useState(DEFAULT_TEMPLATE_IMAGE)
     const [showShortcuts, setShowShortcuts] = useState(false)
     const [showResetConfirm, setShowResetConfirm] = useState(false)
@@ -317,10 +316,6 @@ function SettingsPage() {
         input.click()
     }
 
-    const zoomIn = () => setZoomLevel(prev => Math.min(2.5, +(prev + 0.1).toFixed(1)))
-    const zoomOut = () => setZoomLevel(prev => Math.max(0.3, +(prev - 0.1).toFixed(1)))
-    const zoomReset = () => setZoomLevel(1)
-
     const filteredFrames = frames.filter(f =>
         !frameSearch || f.label.toLowerCase().includes(frameSearch.toLowerCase())
     )
@@ -353,8 +348,8 @@ function SettingsPage() {
         const rect = canvasRef.current.getBoundingClientRect()
         const currentX = e.clientX - rect.left
         const currentY = e.clientY - rect.top
-        const deltaX = (currentX - dragStart.x) / zoomLevel
-        const deltaY = (currentY - dragStart.y) / zoomLevel
+        const deltaX = currentX - dragStart.x
+        const deltaY = currentY - dragStart.y
 
         if (isDragging) {
             let newX = Math.max(0, dragStart.frameX + deltaX)
@@ -574,23 +569,6 @@ function SettingsPage() {
                                 </Button>
                                 <div className="h-5 w-px bg-slate-200 dark:bg-slate-700" />
 
-                                {/* Zoom Controls */}
-                                <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5">
-                                    <Button variant="ghost" size="sm" onClick={zoomOut} title="Zoom arrière" className="!p-1.5">
-                                        <ZoomOut size={14} />
-                                    </Button>
-                                    <button
-                                        onClick={zoomReset}
-                                        className="text-xs font-mono w-12 text-center select-none cursor-pointer hover:text-blue-600 transition-colors"
-                                        title="Réinitialiser le zoom"
-                                    >
-                                        {Math.round(zoomLevel * 100)}%
-                                    </button>
-                                    <Button variant="ghost" size="sm" onClick={zoomIn} title="Zoom avant" className="!p-1.5">
-                                        <ZoomIn size={14} />
-                                    </Button>
-                                </div>
-
                                 <div className="flex-1" />
 
                                 {/* Template Image */}
@@ -642,8 +620,6 @@ function SettingsPage() {
                                     onMouseLeave={handleMouseUp}
                                     onClick={() => setSelectedFrame(null)}
                                     style={{
-                                        transform: `scale(${zoomLevel})`,
-                                        transformOrigin: 'top left',
                                         backgroundImage: showGrid
                                             ? 'repeating-linear-gradient(0deg, rgba(0,0,0,0.1) 0px, transparent 1px, transparent 10px), repeating-linear-gradient(90deg, rgba(0,0,0,0.1) 0px, transparent 1px, transparent 10px)'
                                             : 'none'

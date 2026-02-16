@@ -19,6 +19,45 @@ let tray = null;
 let db = null;
 let isQuitting = false;
 
+function isZoomShortcut(input) {
+  if (input.type !== 'keyDown') return false;
+  if (!input.control && !input.meta) return false;
+
+  const blockedKeys = new Set(['+', '-', '0']);
+  const blockedCodes = new Set([
+    'Equal',
+    'Minus',
+    'Digit0',
+    'NumpadAdd',
+    'NumpadSubtract',
+    'Numpad0'
+  ]);
+
+  return blockedKeys.has(input.key) || blockedCodes.has(input.code);
+}
+
+function applyNoZoomGuards(webContents) {
+  if (!webContents) return;
+
+  const lockZoom = () => {
+    if (webContents.isDestroyed()) return;
+    webContents.setZoomFactor(1);
+    webContents.setZoomLevel(0);
+    webContents.setVisualZoomLevelLimits(1, 1).catch(() => {});
+  };
+
+  lockZoom();
+  webContents.on('did-finish-load', lockZoom);
+  webContents.on('did-navigate-in-page', lockZoom);
+  webContents.on('zoom-changed', lockZoom);
+
+  webContents.on('before-input-event', (event, input) => {
+    if (isZoomShortcut(input)) {
+      event.preventDefault();
+    }
+  });
+}
+
 // ─── Single Instance Lock ───────────────────────────────────────────
 const gotTheLock = app.requestSingleInstanceLock();
 
@@ -174,6 +213,8 @@ function createMainWindow() {
     show: false,
     backgroundColor: '#0f172a',
   });
+
+  applyNoZoomGuards(mainWindow.webContents);
 
   const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
   if (isDev) {

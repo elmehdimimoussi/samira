@@ -8,7 +8,7 @@ import { Input, Textarea } from '../components/ui/Input'
 import { Accordion, AccordionItem } from '../components/ui/Accordion'
 import { ConfirmModal } from '../components/ui/ConfirmModal'
 import { ResponsivePreviewWrapper } from '../components/ResponsivePreviewWrapper'
-import { Maximize2, Minimize2, Printer, Save, FileText, ZoomIn, ZoomOut, ArrowRight, CheckCircle2, Check, CircleDot, Circle, RotateCcw } from 'lucide-react'
+import { Maximize2, Minimize2, Printer, Save, FileText, ArrowRight, CheckCircle2, Check, RotateCcw } from 'lucide-react'
 
 // Default template image path
 const DEFAULT_TEMPLATE_IMAGE = '/assets/templates/bmci-template.jpg'
@@ -50,7 +50,6 @@ function FillingPage() {
     // UI State
     const [activeSection, setActiveSection] = useState('general')
     const [isExpanded, setIsExpanded] = useState(false)
-    const [zoomLevel, setZoomLevel] = useState(1)
 
     // Data State
     const [customers, setCustomers] = useState([])
@@ -655,23 +654,13 @@ function FillingPage() {
                     </div>
 
                     {/* Right Panel - Sticky Preview */}
-                    <div className={`filling-preview sticky top-0 ${isExpanded ? 'fixed inset-4 z-50 h-auto' : 'h-[calc(100vh-140px)]'}`}>
+                    <div className={`filling-preview sticky top-0 ${isExpanded ? 'fixed inset-3 z-50 h-auto' : 'h-[calc(100vh-170px)]'}`}>
                         <div className="preview-header">
                             <div className="flex items-center gap-2">
                                 <span className="preview-title">Aperçu</span>
                                 <span className="badge badge-primary">BMCI</span>
                             </div>
                             <div className="flex items-center gap-1">
-                                <Button variant="ghost" size="sm" onClick={() => setZoomLevel(prev => Math.max(0.5, prev - 0.1))}>
-                                    <ZoomOut size={16} />
-                                </Button>
-                                <span className="text-xs font-mono w-12 text-center select-none">
-                                    {Math.round(zoomLevel * 100)}%
-                                </span>
-                                <Button variant="ghost" size="sm" onClick={() => setZoomLevel(prev => Math.min(2.5, prev + 0.1))}>
-                                    <ZoomIn size={16} />
-                                </Button>
-                                <div className="h-4 w-px bg-slate-300 dark:bg-slate-700 mx-2" />
                                 <Button variant="ghost" size="sm" onClick={toggleExpand}>
                                     {isExpanded ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
                                 </Button>
@@ -689,7 +678,6 @@ function FillingPage() {
                                 <ResponsivePreviewWrapper
                                     width={imageDimensions.width}
                                     height={imageDimensions.height}
-                                    zoomMultiplier={zoomLevel}
                                 >
                                     <div
                                         id="preview-container"

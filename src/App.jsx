@@ -1,4 +1,4 @@
-import { Routes, Route, NavLink, useLocation } from 'react-router-dom'
+import { Routes, Route, NavLink } from 'react-router-dom'
 import { Toaster } from 'sonner'
 import { FileText, Users, ClipboardList, Settings, Wallet } from 'lucide-react'
 import FillingPage from './pages/FillingPage'
@@ -9,8 +9,6 @@ import NotFoundPage from './pages/NotFoundPage'
 import { ThemeToggle } from './components/ThemeToggle'
 
 function App() {
-  const location = useLocation()
-
   const navItems = [
     { path: '/', icon: FileText, label: 'Remplissage', desc: 'Créer une LC' },
     { path: '/customers', icon: Users, label: 'Clients', desc: 'Base de données' },
@@ -19,58 +17,42 @@ function App() {
   ]
 
   return (
-    <div className="flex h-screen w-full overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50">
+    <div className="flex h-screen w-full flex-col overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50">
       <Toaster position="top-right" richColors closeButton />
 
-      {/* Sidebar */}
-      <aside className="sidebar">
-        <div className="sidebar-header">
-          <div className="sidebar-logo">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center text-white shadow-lg shadow-blue-600/25">
-              <Wallet size={22} strokeWidth={1.5} />
-            </div>
-            <div className="sidebar-logo-text">
-              <span className="block text-base font-bold tracking-tight">LC Pro</span>
-              <span className="block text-[11px] text-slate-400 dark:text-slate-500 font-medium">Gestionnaire BMCI</span>
-            </div>
+      <header className="topbar">
+        <div className="topbar-brand">
+          <div className="w-9 h-9 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center text-white shadow-lg shadow-blue-600/25">
+            <Wallet size={20} strokeWidth={1.6} />
+          </div>
+          <div>
+            <p className="text-sm font-bold tracking-tight text-slate-900 dark:text-white">LC Pro</p>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400">Gestionnaire BMCI</p>
           </div>
         </div>
 
-        <div className="px-4 pb-3">
-          <div className="h-px bg-slate-100 dark:bg-slate-800" />
-        </div>
-
-        <nav className="sidebar-nav">
-          <p className="px-3 mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-600">Navigation</p>
+        <nav className="topbar-nav" aria-label="Navigation principale">
           {navItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
               end={item.path === '/'}
               className={({ isActive }) =>
-                `sidebar-nav-item ${isActive ? 'active' : ''}`
+                `topbar-nav-item ${isActive ? 'active' : ''}`
               }
+              title={item.desc}
             >
-              <span className="w-6 flex justify-center nav-icon">
-                <item.icon size={19} strokeWidth={1.5} />
-              </span>
+              <item.icon size={16} strokeWidth={1.7} />
               <span>{item.label}</span>
             </NavLink>
           ))}
         </nav>
 
-        <div className="mt-auto">
-          <div className="px-4 pb-2">
-            <div className="h-px bg-slate-100 dark:bg-slate-800" />
-          </div>
-          <div className="p-3">
-            <ThemeToggle />
-          </div>
-          <div className="px-5 pb-4">
-            <p className="text-[10px] text-slate-400 dark:text-slate-600">v1.0.0 — IGADOR SAMIRA</p>
-          </div>
+        <div className="topbar-tools">
+          <ThemeToggle />
+          <p className="hidden lg:block text-[10px] text-slate-500 dark:text-slate-400">v1.0.0</p>
         </div>
-      </aside>
+      </header>
 
       {/* Main Content */}
       <main className="main-content">

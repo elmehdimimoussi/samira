@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import SettingsPage from '@/pages/SettingsPage'
@@ -43,19 +43,9 @@ describe('SettingsPage', () => {
       expect(screen.getByText(/champs actifs/)).toBeInTheDocument()
     })
 
-    it('affiche le zoom', () => {
+    it('n\'affiche pas de contrôle de zoom', () => {
       renderPage()
-      expect(screen.getByText('100%')).toBeInTheDocument()
-    })
-  })
-
-  describe('zoom', () => {
-    it('peut réinitialiser le zoom en cliquant sur le pourcentage', async () => {
-      const user = userEvent.setup()
-      renderPage()
-      const zoomLabel = screen.getByText('100%')
-      await user.click(zoomLabel)
-      expect(screen.getByText('100%')).toBeInTheDocument()
+      expect(screen.queryByText('100%')).not.toBeInTheDocument()
     })
   })
 

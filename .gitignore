@@ -11,8 +11,11 @@ node_modules
 dist
 dist-ssr
 dist-electron
+build
+coverage
 release
 *.local
+.env*
 
 # Generated icons (keep icon.svg source)
 build/icon-*.png
