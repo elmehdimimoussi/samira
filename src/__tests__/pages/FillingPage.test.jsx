@@ -49,6 +49,11 @@ describe('FillingPage', () => {
       renderPage()
       expect(screen.getByText(/aper[cç]u/i)).toBeInTheDocument()
     })
+
+    it('n\'affiche pas de contrôle de zoom', () => {
+      renderPage()
+      expect(screen.queryByText('100%')).not.toBeInTheDocument()
+    })
   })
 
   describe('chargement des frames depuis les paramètres', () => {

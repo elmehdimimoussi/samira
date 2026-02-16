@@ -22,7 +22,7 @@
   }
 
   /* Smooth transitions for dark mode — scoped to avoid layout side-effects */
-  body, .sidebar, .main-content, .card, .btn, .form-input, .form-select, .form-textarea, .modal, .modal-overlay, .badge, .stat-card, .toggle-slider {
+  body, .topbar, .topbar-nav-item, .main-content, .card, .btn, .form-input, .form-select, .form-textarea, .modal, .modal-overlay, .badge, .stat-card, .toggle-slider {
     transition-property: background-color, border-color, color, box-shadow;
     transition-duration: 200ms;
     transition-timing-function: ease-out;
@@ -34,38 +34,28 @@
   /* ═══════════════════════════════════════════ */
   /* Layout Components                           */
   /* ═══════════════════════════════════════════ */
-  .sidebar {
-    /* Added shadow for depth */
-    @apply w-[260px] bg-white border-r border-slate-200/80 flex flex-col shrink-0 transition-all duration-300 dark:bg-slate-950 dark:border-slate-800/80 z-40 shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)];
+  .topbar {
+    @apply h-16 px-5 md:px-7 bg-white/90 backdrop-blur-xl border-b border-slate-200/70 dark:bg-slate-950/95 dark:border-slate-800/80 z-40 shadow-sm flex items-center gap-3;
   }
 
-  .sidebar-header {
-    @apply px-5 py-6 flex items-center gap-3;
+  .topbar-brand {
+    @apply hidden md:flex items-center gap-2.5 shrink-0;
   }
 
-  .sidebar-logo {
-    @apply flex items-center gap-3;
+  .topbar-nav {
+    @apply flex items-center gap-1 flex-1 min-w-0;
   }
 
-  .sidebar-logo-text {
-    @apply text-slate-900 dark:text-white font-bold text-lg tracking-tight;
+  .topbar-nav-item {
+    @apply inline-flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/60 dark:hover:text-slate-100 whitespace-nowrap;
   }
 
-  .sidebar-nav {
-    @apply flex-1 px-3 py-2 flex flex-col gap-1 overflow-y-auto;
+  .topbar-nav-item.active {
+    @apply bg-blue-50 text-blue-700 border border-blue-100 dark:bg-blue-900/25 dark:text-blue-300 dark:border-blue-800/60;
   }
 
-  .sidebar-nav-item {
-    @apply flex items-center gap-3 px-3 py-2.5 text-slate-600 text-[13px] font-medium rounded-xl transition-all duration-200 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/60 dark:hover:text-slate-200 cursor-pointer select-none relative border border-transparent;
-  }
-
-  .sidebar-nav-item.active {
-    @apply bg-white border-slate-200 shadow-sm text-blue-700 font-semibold dark:bg-blue-900/20 dark:border-blue-800/50 dark:text-blue-400 dark:shadow-none;
-    /* Removed inset shadow, replaced with card-like aesthetic for depth */
-  }
-
-  .sidebar-nav-item.active .nav-icon {
-    @apply text-blue-600 dark:text-blue-400;
+  .topbar-tools {
+    @apply flex items-center gap-2 shrink-0;
   }
 
   /* Main Content */
@@ -446,7 +436,7 @@
 /* ═══════════════════════════════════════════ */
 .filling-layout {
   display: grid;
-  grid-template-columns: minmax(300px, 25%) 1fr;
+  grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
   gap: 1.5rem;
   height: 100%;
   overflow: hidden;
@@ -478,12 +468,7 @@
 }
 
 .preview-canvas {
-  /* Removed 'overflow-auto' to prevent scrollbars on the canvas container itself if handled by wrapper, 
-     but actually we need overflow-auto for zoom. 
-     Added 'scrollbar-none' to hide default scrollbars if they are ugly. 
-     Or better: constrain width carefully.
-  */
-  @apply flex-1 overflow-auto p-6 flex items-center justify-center relative min-h-0 bg-slate-50/50 dark:bg-slate-950/50;
+  @apply flex-1 overflow-auto p-3 md:p-4 flex items-center justify-center relative min-h-0 bg-slate-50/50 dark:bg-slate-950/50;
   background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
   background-size: 24px 24px;
 }
@@ -546,9 +531,9 @@
 /* ═══════════════════════════════════════════ */
 .designer-layout {
   display: grid;
-  grid-template-columns: 1fr 340px;
+  grid-template-columns: minmax(0, 1fr) 300px;
   gap: 1.5rem;
-  height: calc(100vh - 180px);
+  height: calc(100vh - 170px);
 }
 
 .designer-canvas-container {
@@ -644,7 +629,7 @@
 /* Print Styles                                */
 /* ═══════════════════════════════════════════ */
 @media print {
-  .sidebar, .page-header, .filling-form, .preview-header {
+  .topbar, .page-header, .filling-form, .preview-header {
     display: none !important;
   }
   .main-content, .page-body, .filling-layout, .filling-preview {
@@ -656,9 +641,21 @@
   .filling-layout {
     display: block !important;
   }
+  .filling-preview {
+    position: static !important;
+    width: 100% !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
   .preview-canvas {
     padding: 0 !important;
     background: none !important;
+  }
+  .modal-overlay {
+    display: none !important;
+  }
+  body {
+    background: white !important;
   }
 }
 
@@ -682,45 +679,21 @@
   }
 }
 
-/* ═══════════════════════════════════════════ */
-/* Print Styles                                */
-/* ═══════════════════════════════════════════ */
-@media print {
-  .sidebar {
-    display: none !important;
+@media (max-width: 768px) {
+  .topbar {
+    @apply h-14 px-3;
   }
-  .page-header {
-    display: none !important;
+
+  .topbar-brand {
+    @apply hidden;
   }
-  .filling-form {
-    display: none !important;
+
+  .topbar-nav {
+    @apply overflow-x-auto;
+    scrollbar-width: none;
   }
-  .filling-layout {
-    display: block !important;
-  }
-  .filling-preview {
-    position: static !important;
-    width: 100% !important;
-    height: auto !important;
-    box-shadow: none !important;
-    border: none !important;
-  }
-  .preview-header {
-    display: none !important;
-  }
-  .preview-canvas {
-    background: none !important;
-  }
-  .main-content {
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: visible !important;
-  }
-  .modal-overlay {
-    display: none !important;
-  }
-  body {
-    background: white !important;
+
+  .topbar-nav::-webkit-scrollbar {
+    display: none;
   }
 }
-

@@ -38,3 +38,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
         import: (jsonData) => ipcRenderer.invoke('backup:import', jsonData)
     }
 });
+
+window.addEventListener(
+    'wheel',
+    (event) => {
+        if (event.ctrlKey || event.metaKey) {
+            event.preventDefault();
+        }
+    },
+    { passive: false, capture: true }
+);

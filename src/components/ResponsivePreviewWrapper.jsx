@@ -4,7 +4,7 @@ import { useRef, useState, useEffect } from 'react';
  * A wrapper component that automatically scales its content to fit the parent container.
  * Useful for the Preview image which has fixed pixel dimensions but must look responsive.
  */
-export const ResponsivePreviewWrapper = ({ children, width, height, zoomMultiplier = 1 }) => {
+export const ResponsivePreviewWrapper = ({ children, width, height }) => {
     const containerRef = useRef(null);
     const [baseScale, setBaseScale] = useState(1);
 
@@ -33,8 +33,7 @@ export const ResponsivePreviewWrapper = ({ children, width, height, zoomMultipli
         return () => resizeObserver.disconnect();
     }, [width, height]);
 
-    // Apply manual zoom multiplier to the base "fit-width" scale
-    const finalScale = baseScale * zoomMultiplier;
+    const finalScale = baseScale;
     
     // Calculate the actual visual size after scaling
     const scaledWidth = width * finalScale;
