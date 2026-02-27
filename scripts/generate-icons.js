@@ -69,7 +69,7 @@ async function generateIcons() {
     fs.writeFileSync(path.join(BUILD_DIR, 'icon.ico'), icoBuffer);
     fs.writeFileSync(path.join(PUBLIC_DIR, 'icon.ico'), icoBuffer);
     console.log('  ✅ Generated icon.ico');
-  } catch (e) {
+  } catch {
     console.warn('  ⚠️  png-to-ico not available, using electron-builder icon conversion');
     console.warn('     Install with: npm install png-to-ico --save-dev');
   }

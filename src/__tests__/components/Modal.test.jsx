@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { render, screen, within } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Modal } from '@/components/ui/Modal'
 
@@ -43,7 +43,7 @@ describe('Modal', () => {
   })
 
   it('n\'affiche pas de footer quand non fourni', () => {
-    const { container } = render(<Modal {...defaultProps} />)
+    render(<Modal {...defaultProps} />)
     // The modal-footer div should not be rendered
     const portal = document.querySelector('.modal-footer')
     expect(portal).not.toBeInTheDocument()

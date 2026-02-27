@@ -1,9 +1,0 @@
-openapi: 3.0.3
-info:
-  title: LC Preview Workspace Refactor Contracts
-  version: 1.0.0
-  description: |
-    No new HTTP API contracts are introduced by this UI-focused feature.
-    Existing Electron IPC interactions remain unchanged.
-paths: {}
-components: {}

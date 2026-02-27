@@ -4,7 +4,7 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 
 export default [
-  { ignores: ['dist', 'build', 'coverage', 'dist-electron', 'node_modules'] },
+  { ignores: ['dist', 'build', 'coverage', 'dist-electron', 'node_modules', '*.min.js'] },
   {
     files: ['**/*.{js,jsx}'],
     languageOptions: {
@@ -32,6 +32,22 @@ export default [
       ],
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
       'react-hooks/exhaustive-deps': 'warn',
+    },
+  },
+  {
+    files: ['src/__tests__/**/*.{js,jsx}', '**/*.test.{js,jsx}'],
+    languageOptions: {
+      globals: {
+        vi: 'readonly',
+        describe: 'readonly',
+        it: 'readonly',
+        test: 'readonly',
+        expect: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+      },
     },
   },
 ]

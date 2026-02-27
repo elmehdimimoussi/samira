@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Button } from '../components/ui/Button'
 import { Card, CardBody } from '../components/ui/Card'
-import { Input, Textarea } from '../components/ui/Input'
-import { Modal } from '../components/ui/Modal'
 import { ConfirmModal } from '../components/ui/ConfirmModal'
-import { Plus, Search, Pencil, Trash2, Users, UserPlus, MapPin } from 'lucide-react'
+import { CustomerFormModal } from '../components/customers/CustomerFormModal'
+import { useCustomerForm, EMPTY_CUSTOMER_FORM, mapCustomerToForm } from '../hooks/useCustomerForm'
+import { validateCustomerPayload } from '../validation/customerSchema'
+import { Input } from '../components/ui/Input'
+import { Search, Pencil, Trash2, Users, UserPlus, MapPin } from 'lucide-react'
 
 function CustomersPage() {
     const [customers, setCustomers] = useState([])
@@ -13,12 +15,7 @@ function CustomersPage() {
     const [showModal, setShowModal] = useState(false)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [editingCustomer, setEditingCustomer] = useState(null)
-    const [formData, setFormData] = useState({
-        name: '',
-        address: '',
-        city: '',
-        additional_info: ''
-    })
+    const { formData, formErrors, setFieldValue, setFormErrors, resetForm } = useCustomerForm()
     const [confirmDeleteId, setConfirmDeleteId] = useState(null)
 
     useEffect(() => {
@@ -40,55 +37,55 @@ function CustomersPage() {
     const filteredCustomers = customers.filter(c =>
         c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (c.address && c.address.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (c.city && c.city.toLowerCase().includes(searchQuery.toLowerCase()))
+        (c.city && c.city.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (c.account_number && c.account_number.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (c.agency && c.agency.toLowerCase().includes(searchQuery.toLowerCase()))
     )
 
     const openAddModal = () => {
         setEditingCustomer(null)
-        setFormData({ name: '', address: '', city: '', additional_info: '' })
+        resetForm(EMPTY_CUSTOMER_FORM)
         setShowModal(true)
     }
 
     const openEditModal = (customer) => {
         setEditingCustomer(customer)
-        setFormData({
-            name: customer.name || '',
-            address: customer.address || '',
-            city: customer.city || '',
-            additional_info: customer.additional_info || ''
-        })
+        resetForm(mapCustomerToForm(customer))
         setShowModal(true)
     }
 
     const closeModal = () => {
         setShowModal(false)
         setEditingCustomer(null)
-        setFormData({ name: '', address: '', city: '', additional_info: '' })
+        resetForm(EMPTY_CUSTOMER_FORM)
     }
 
     const handleInputChange = (field) => (e) => {
-        setFormData(prev => ({ ...prev, [field]: e.target.value }))
+        setFieldValue(field, e.target.value)
     }
 
     const handleSubmit = async (e) => {
         e.preventDefault()
 
-        if (!formData.name.trim()) {
-            toast.error('Le nom est obligatoire')
+        const validation = validateCustomerPayload(formData)
+        if (!validation.success) {
+            setFormErrors({ [validation.field]: validation.message })
+            toast.error(validation.message)
             return
         }
 
         setIsSubmitting(true)
         try {
             if (window.electronAPI) {
+                const payload = validation.data
                 if (editingCustomer) {
                     await window.electronAPI.customers.update({
                         id: editingCustomer.id,
-                        ...formData
+                        ...payload
                     })
                     toast.success('Client modifié avec succès')
                 } else {
-                    await window.electronAPI.customers.add(formData)
+                    await window.electronAPI.customers.add(payload)
                     toast.success('Client ajouté avec succès')
                 }
                 await loadCustomers()
@@ -140,7 +137,7 @@ function CustomersPage() {
                     <CardBody className="!py-3">
                         <Input
                             icon={<Search size={16} />}
-                            placeholder="Rechercher par nom, adresse ou ville..."
+                            placeholder="Rechercher par nom, adresse, compte, agence ou ville..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             containerClassName="mb-0"
@@ -170,6 +167,8 @@ function CustomersPage() {
                                 <tr>
                                     <th>Nom</th>
                                     <th>Adresse</th>
+                                    <th>Compte N°</th>
+                                    <th>Agence</th>
                                     <th>Ville</th>
                                     <th>Informations</th>
                                     <th style={{ width: '120px' }}>Actions</th>
@@ -178,7 +177,7 @@ function CustomersPage() {
                             <tbody>
                                 {filteredCustomers.length === 0 ? (
                                     <tr>
-                                        <td colSpan="5">
+                                        <td colSpan="7">
                                             <div className="empty-state">
                                                 <div className="empty-state-icon">
                                                     <Users size={28} />
@@ -201,6 +200,8 @@ function CustomersPage() {
                                                 <span className="font-semibold text-slate-800 dark:text-slate-200">{customer.name}</span>
                                             </td>
                                             <td className="text-slate-500 dark:text-slate-400">{customer.address || '—'}</td>
+                                            <td className="font-mono text-slate-600 dark:text-slate-300">{customer.account_number || '—'}</td>
+                                            <td className="text-slate-600 dark:text-slate-300">{customer.agency || '—'}</td>
                                             <td>
                                                 {customer.city ? (
                                                     <span className="inline-flex items-center gap-1 text-slate-600 dark:text-slate-300">
@@ -240,53 +241,16 @@ function CustomersPage() {
                 </Card>
             </div>
 
-            {/* Add/Edit Modal */}
-            <Modal
+            <CustomerFormModal
                 isOpen={showModal}
+                isSubmitting={isSubmitting}
+                isEditing={Boolean(editingCustomer)}
+                formData={formData}
+                formErrors={formErrors}
                 onClose={closeModal}
-                title={editingCustomer ? 'Modifier le client' : 'Ajouter un client'}
-                footer={
-                    <>
-                        <Button variant="outline" onClick={closeModal} disabled={isSubmitting}>
-                            Annuler
-                        </Button>
-                        <Button onClick={handleSubmit} isLoading={isSubmitting}>
-                            {editingCustomer ? 'Modifier' : 'Ajouter'}
-                        </Button>
-                    </>
-                }
-            >
-                <form id="customer-form" onSubmit={handleSubmit} className="flex flex-col gap-4">
-                    <Input
-                        label="Nom *"
-                        value={formData.name}
-                        onChange={handleInputChange('name')}
-                        placeholder="Nom du client ou de l'entreprise"
-                        required
-                        autoFocus
-                    />
-                    <Textarea
-                        label="Adresse"
-                        value={formData.address}
-                        onChange={handleInputChange('address')}
-                        placeholder="Adresse complète"
-                        rows={2}
-                    />
-                    <Input
-                        label="Ville"
-                        value={formData.city}
-                        onChange={handleInputChange('city')}
-                        placeholder="Ville"
-                    />
-                    <Textarea
-                        label="Informations supplémentaires"
-                        value={formData.additional_info}
-                        onChange={handleInputChange('additional_info')}
-                        placeholder="Notes, ICE, RC, etc."
-                        rows={2}
-                    />
-                </form>
-            </Modal>
+                onSubmit={handleSubmit}
+                onFieldChange={handleInputChange}
+            />
 
             <ConfirmModal
                 isOpen={confirmDeleteId !== null}

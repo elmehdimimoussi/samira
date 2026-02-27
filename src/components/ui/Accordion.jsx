@@ -1,4 +1,4 @@
-import { useState, createContext, useContext, useRef, useEffect, useCallback } from 'react'
+import { useState, createContext, useContext, useRef, useEffect } from 'react'
 import { ChevronDown } from 'lucide-react'
 
 const AccordionContext = createContext({})
