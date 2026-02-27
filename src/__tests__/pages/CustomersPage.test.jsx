@@ -1,13 +1,13 @@
-import { describe, it, expect, beforeEach, vi as viGlobal } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import CustomersPage from '@/pages/CustomersPage'
 
 const mockCustomers = [
-  { id: 1, name: 'Société Alpha', address: '10 Rue Hassan II', city: 'Casablanca', additional_info: 'Client VIP' },
-  { id: 2, name: 'Entreprise Beta', address: '25 Av Mohammed V', city: 'Rabat', additional_info: '' },
-  { id: 3, name: 'Comptoir Gamma', address: '5 Bd Zerktouni', city: 'Casablanca', additional_info: 'Nouveau' },
+  { id: 1, name: 'Société Alpha', address: '10 Rue Hassan II', account_number: 'A-001', agency: 'Agadir Centre', city: 'Casablanca', additional_info: 'Client VIP' },
+  { id: 2, name: 'Entreprise Beta', address: '25 Av Mohammed V', account_number: 'B-111', agency: 'Rabat Ville', city: 'Rabat', additional_info: '' },
+  { id: 3, name: 'Comptoir Gamma', address: '5 Bd Zerktouni', account_number: '', agency: '', city: 'Casablanca', additional_info: 'Nouveau' },
 ]
 
 const renderPage = () => render(
@@ -71,6 +71,21 @@ describe('CustomersPage', () => {
 
       const searchInput = screen.getByPlaceholderText(/rechercher/i)
       await user.type(searchInput, 'Rabat')
+
+      expect(screen.getByText('Entreprise Beta')).toBeInTheDocument()
+      expect(screen.queryByText('Société Alpha')).not.toBeInTheDocument()
+    })
+
+    it('filtre par agence', async () => {
+      const user = userEvent.setup()
+      renderPage()
+
+      await waitFor(() => {
+        expect(screen.getByText('Société Alpha')).toBeInTheDocument()
+      })
+
+      const searchInput = screen.getByPlaceholderText(/rechercher/i)
+      await user.type(searchInput, 'Rabat Ville')
 
       expect(screen.getByText('Entreprise Beta')).toBeInTheDocument()
       expect(screen.queryByText('Société Alpha')).not.toBeInTheDocument()

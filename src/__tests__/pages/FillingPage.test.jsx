@@ -336,6 +336,39 @@ describe('FillingPage', () => {
     })
   })
 
+  describe('autocomplétion client du tiré', () => {
+    it('remplit nom, adresse, compte, agence et ville en une sélection', async () => {
+      const user = userEvent.setup()
+      window.electronAPI.customers.getAll.mockResolvedValue([
+        {
+          id: 10,
+          name: 'Société Atlas',
+          address: '12 Rue Atlas, Agadir',
+          account_number: 'AT-3321',
+          agency: 'Agadir Centre',
+          city: 'Agadir',
+        },
+      ])
+
+      renderPage()
+
+      const drawerInput = await screen.findByPlaceholderText('Rechercher un client...')
+      await user.type(drawerInput, 'Atlas')
+
+      const option = await screen.findByRole('option', { name: /Société Atlas/i })
+      await user.click(option)
+
+      expect(drawerInput).toHaveValue('Société Atlas')
+
+      const addressInputs = screen.getAllByLabelText('Adresse ou siège')
+      expect(addressInputs.some((input) => input.value === '12 Rue Atlas, Agadir')).toBe(true)
+
+      expect(screen.getByLabelText('Compte N°')).toHaveValue('AT-3321')
+      expect(screen.getByLabelText('Agence')).toHaveValue('Agadir Centre')
+      expect(screen.getByLabelText('Ville')).toHaveValue('Agadir')
+    })
+  })
+
   describe('sans electronAPI', () => {
     it('ne plante pas sans electronAPI', () => {
       const originalAPI = window.electronAPI

@@ -1,8 +1,9 @@
-import { useState, useEffect, useId, useMemo } from 'react'
+import { useState, useEffect, useId, useMemo, useCallback } from 'react'
 import { toast } from 'sonner'
 import { convertAmountToFrench } from '../services/frenchTextConverter'
 import { formatAmountLive, parseAmount } from '../services/amountFormatter'
 import { formatDate, formatDateForInput, parseFrenchDate } from '../services/dateFormatter'
+import { useDrawerAutocomplete } from '../hooks/useDrawerAutocomplete'
 import { Button } from '../components/ui/Button'
 import { Input, Textarea } from '../components/ui/Input'
 import { Accordion, AccordionItem } from '../components/ui/Accordion'
@@ -53,8 +54,6 @@ function FillingPage() {
 
     // Data State
     const [customers, setCustomers] = useState([])
-    const [showAutocomplete, setShowAutocomplete] = useState(false)
-    const [filteredCustomers, setFilteredCustomers] = useState([])
     const [frames, setFrames] = useState([])
     const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0 })
     const [showResetConfirm, setShowResetConfirm] = useState(false)
@@ -170,29 +169,35 @@ function FillingPage() {
         setFormData(prev => ({ ...prev, amount: formatted }))
     }
 
+    const applySelectedCustomer = useCallback((mappedFields) => {
+        setFormData((prev) => ({ ...prev, ...mappedFields }))
+    }, [])
+
+    const {
+        showAutocomplete,
+        filteredCustomers,
+        handleSearchChange,
+        handleFocus,
+        handleBlur,
+        selectCustomer,
+    } = useDrawerAutocomplete(customers)
+
     const handleDrawerChange = (e) => {
         const value = e.target.value
-        setFormData(prev => ({ ...prev, drawerName: value }))
-
-        if (value.length >= 2) {
-            const filtered = customers.filter(c =>
-                c.name.toLowerCase().includes(value.toLowerCase())
-            )
-            setFilteredCustomers(filtered)
-            setShowAutocomplete(filtered.length > 0)
-        } else {
-            setShowAutocomplete(false)
-        }
+        setFormData((prev) => ({ ...prev, drawerName: value }))
+        handleSearchChange(value)
     }
 
-    const selectCustomer = (customer) => {
-        setFormData(prev => ({
-            ...prev,
-            drawerName: customer.name,
-            drawerAddress: customer.address || '',
-            city: customer.city || '',
-        }))
-        setShowAutocomplete(false)
+    const handleDrawerFocus = () => {
+        handleFocus(formData.drawerName)
+    }
+
+    const handleDrawerBlur = () => {
+        handleBlur()
+    }
+
+    const handleSelectCustomer = (customer) => {
+        selectCustomer(customer, applySelectedCustomer)
     }
 
     const handleInputChange = (field) => (e) => {
@@ -564,8 +569,8 @@ function FillingPage() {
                                                     placeholder="Rechercher un client..."
                                                     value={formData.drawerName}
                                                     onChange={handleDrawerChange}
-                                                    onFocus={() => formData.drawerName.length >= 2 && setShowAutocomplete(true)}
-                                                    onBlur={() => setTimeout(() => setShowAutocomplete(false), 200)}
+                                                    onFocus={handleDrawerFocus}
+                                                    onBlur={handleDrawerBlur}
                                                 />
                                                 {showAutocomplete && (
                                                     <div className="autocomplete-dropdown" role="listbox">
@@ -574,8 +579,8 @@ function FillingPage() {
                                                                 key={customer.id}
                                                                 className="autocomplete-item"
                                                                 role="option"
-                                                                onPointerDown={(e) => { e.preventDefault(); selectCustomer(customer) }}
-                                                                onKeyDown={(e) => { if (e.key === 'Enter') selectCustomer(customer) }}
+                                                                onPointerDown={(e) => { e.preventDefault(); handleSelectCustomer(customer) }}
+                                                                onKeyDown={(e) => { if (e.key === 'Enter') handleSelectCustomer(customer) }}
                                                                 tabIndex={0}
                                                             >
                                                                 <div className="autocomplete-item-name">{customer.name}</div>
