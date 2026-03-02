@@ -1,4 +1,4 @@
-import { useState, createContext, useContext, useRef, useEffect } from 'react'
+import { useState, createContext, useContext, useRef, useEffect, useId } from 'react'
 import { ChevronDown } from 'lucide-react'
 
 const AccordionContext = createContext({})
@@ -10,19 +10,22 @@ export function Accordion({ children, value, onValueChange, defaultValue, type =
     const currentValue = isControlled ? value : internalValue
 
     const handleValueChange = (itemValue) => {
-        if (isControlled) {
-            onValueChange?.(itemValue)
-        } else {
+        const nextValue = (() => {
             if (type === "single") {
-                setInternalValue(prev => prev === itemValue ? "" : itemValue)
-            } else {
-                setInternalValue(prev => {
-                    if (prev.includes(itemValue)) {
-                        return prev.filter(v => v !== itemValue)
-                    }
-                    return [...prev, itemValue]
-                })
+                return currentValue === itemValue ? "" : itemValue
             }
+
+            const values = Array.isArray(currentValue) ? currentValue : []
+            if (values.includes(itemValue)) {
+                return values.filter(v => v !== itemValue)
+            }
+            return [...values, itemValue]
+        })()
+
+        if (isControlled) {
+            onValueChange?.(nextValue)
+        } else {
+            setInternalValue(nextValue)
         }
     }
 
@@ -37,8 +40,10 @@ export function Accordion({ children, value, onValueChange, defaultValue, type =
 
 export function AccordionItem({ value: itemValue, title, children, className = "" }) {
     const { value, onValueChange, type } = useContext(AccordionContext)
-    const isOpen = type === "single" ? value === itemValue : value.includes(itemValue)
+    const isOpen = type === "single" ? value === itemValue : Array.isArray(value) && value.includes(itemValue)
     const contentRef = useRef(null)
+    const triggerId = useId()
+    const contentId = useId()
     const [height, setHeight] = useState(0)
     const [overflow, setOverflow] = useState('hidden')
 
@@ -48,14 +53,17 @@ export function AccordionItem({ value: itemValue, title, children, className = "
             setHeight(contentEl.scrollHeight)
             const timer = setTimeout(() => setOverflow('visible'), 300)
 
-            const observer = new ResizeObserver(() => {
-                setHeight(contentEl.scrollHeight)
-            })
-            observer.observe(contentEl)
+            const observer = typeof ResizeObserver !== 'undefined'
+                ? new ResizeObserver(() => {
+                    setHeight(contentEl.scrollHeight)
+                })
+                : null
+
+            observer?.observe(contentEl)
 
             return () => {
                 clearTimeout(timer)
-                observer.disconnect()
+                observer?.disconnect()
             }
         } else {
             setOverflow('hidden')
@@ -68,6 +76,9 @@ export function AccordionItem({ value: itemValue, title, children, className = "
             <button
                 type="button"
                 onClick={() => onValueChange(itemValue)}
+                id={triggerId}
+                aria-controls={contentId}
+                aria-expanded={isOpen}
                 className="w-full flex items-center justify-between p-4 text-left hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-colors rounded-xl cursor-pointer group"
             >
                 <span className={`font-semibold text-sm transition-colors ${isOpen ? 'text-blue-700 dark:text-blue-400' : 'text-slate-700 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-white'}`}>{title}</span>
@@ -76,6 +87,9 @@ export function AccordionItem({ value: itemValue, title, children, className = "
                 />
             </button>
             <div
+                id={contentId}
+                role="region"
+                aria-labelledby={triggerId}
                 style={{ height, overflow }}
                 className="transition-[height] duration-300 ease-in-out"
             >

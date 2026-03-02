@@ -1,9 +1,10 @@
-import { useId } from 'react'
+import { useId, useMemo, useState } from 'react'
 import { ArrowRight, Check, CheckCircle2 } from 'lucide-react'
 import { Button } from '../ui/Button'
 import { Input, Textarea } from '../ui/Input'
 import { Accordion, AccordionItem } from '../ui/Accordion'
 import { useDrawerAutocomplete } from '../../hooks/useDrawerAutocomplete'
+import { useFocusMode } from '../../hooks/useFocusMode'
 import { SECTIONS, SECTION_LABELS } from '../../hooks/useLCForm'
 
 export function FillingForm({
@@ -20,6 +21,8 @@ export function FillingForm({
   saveOperation,
 }) {
   const drawerNameId = useId()
+  const [touchedFields, setTouchedFields] = useState({})
+  const { handleFieldFocus, handleFieldBlur, getFieldState } = useFocusMode()
 
   const {
     showAutocomplete,
@@ -46,6 +49,43 @@ export function FillingForm({
     selectCustomer(customer, applySelectedCustomer)
   }
 
+  const validationErrors = useMemo(() => {
+    const errors = {}
+
+    if (isFrameEnabled('date_due') && !formData.dateDue) {
+      errors.dateDue = 'La date d\'echeance est requise.'
+    }
+    if ((isFrameEnabled('amount_numeric') || isFrameEnabled('amount_text')) && !formData.amount.trim()) {
+      errors.amount = 'Le montant est requis.'
+    }
+    if (isFrameEnabled('tireur_name') && !formData.tireurName.trim()) {
+      errors.tireurName = 'Le nom du tireur est requis.'
+    }
+    if (isFrameEnabled('beneficiary_name') && !formData.beneficiaryName.trim()) {
+      errors.beneficiaryName = 'Le beneficiaire est requis.'
+    }
+    if (isFrameEnabled('drawer_name') && !formData.drawerName.trim()) {
+      errors.drawerName = 'Le nom du tire est requis.'
+    }
+
+    return errors
+  }, [formData, isFrameEnabled])
+
+  const getFieldClassName = (fieldId) => {
+    const { isActive, shouldDim } = getFieldState(fieldId)
+    return [
+      'transition-all duration-200',
+      isActive ? 'ring-2 ring-blue-500/40 shadow-md shadow-blue-500/10' : '',
+      shouldDim ? 'opacity-45 grayscale-[35%]' : 'opacity-100',
+    ].join(' ')
+  }
+
+  const fieldError = (fieldId) => (touchedFields[fieldId] ? validationErrors[fieldId] : undefined)
+
+  const touchField = (fieldId) => {
+    setTouchedFields((prev) => ({ ...prev, [fieldId]: true }))
+  }
+
   const renderNextButton = () => (
     <div className="mt-4 flex justify-end">
       <Button size="sm" onClick={nextSection} className="gap-1">
@@ -60,11 +100,13 @@ export function FillingForm({
         {SECTIONS.map((section, index) => (
           <div key={section} className="progress-step flex items-center">
             <button
+              type="button"
               onClick={() => setActiveSection(section)}
-              className={`progress-step-dot ${
+              className={`progress-step-dot focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 ${
                 activeSection === section ? 'active' : sectionStatus[section] ? 'completed' : 'pending'
               }`}
               title={SECTION_LABELS[section]}
+              aria-label={`Aller a la section ${SECTION_LABELS[section]}`}
             >
               {sectionStatus[section] && activeSection !== section ? <Check size={14} strokeWidth={2.5} /> : <span>{index + 1}</span>}
             </button>
@@ -80,16 +122,36 @@ export function FillingForm({
         <AccordionItem value="general" title="1. Informations Générales">
           <div className="grid grid-cols-2 gap-4">
             {isFrameEnabled('date_due') && (
-              <Input type="date" label="Date d'échéance" value={formData.dateDue} onChange={handleInputChange('dateDue')} />
+              <Input
+                type="date"
+                label="Date d'échéance"
+                value={formData.dateDue}
+                onChange={handleInputChange('dateDue')}
+                onFocus={() => handleFieldFocus('dateDue')}
+                onBlur={(event) => {
+                  touchField('dateDue')
+                  handleFieldBlur(event)
+                }}
+                className={getFieldClassName('dateDue')}
+                error={fieldError('dateDue')}
+                reserveErrorSpace
+              />
             )}
             {(isFrameEnabled('amount_numeric') || isFrameEnabled('amount_text')) && (
               <Input
                 label="Montant (DH)"
-                className="font-mono text-lg font-bold text-right"
                 placeholder="0,00"
                 value={formData.amount}
                 onChange={handleAmountChange}
+                onFocus={() => handleFieldFocus('amount')}
+                onBlur={(event) => {
+                  touchField('amount')
+                  handleFieldBlur(event)
+                }}
+                error={fieldError('amount')}
+                reserveErrorSpace
                 autoFocus
+                className={`${getFieldClassName('amount')} font-mono text-lg font-bold text-right`}
               />
             )}
           </div>
@@ -104,15 +166,31 @@ export function FillingForm({
         <AccordionItem value="tireur" title="2. Le Tireur (Vous)">
           <div className="space-y-4">
             {isFrameEnabled('tireur_name') && (
-              <Input
-                label="Nom ou dénomination"
-                value={formData.tireurName}
-                onChange={handleInputChange('tireurName')}
-                placeholder="Votre nom ou société"
-              />
-            )}
+                <Input
+                  label="Nom ou dénomination"
+                  value={formData.tireurName}
+                  onChange={handleInputChange('tireurName')}
+                  placeholder="Votre nom ou société"
+                  onFocus={() => handleFieldFocus('tireurName')}
+                  onBlur={(event) => {
+                    touchField('tireurName')
+                    handleFieldBlur(event)
+                  }}
+                  className={getFieldClassName('tireurName')}
+                  error={fieldError('tireurName')}
+                  reserveErrorSpace
+                />
+              )}
             {isFrameEnabled('tireur_address') && (
-              <Textarea label="Adresse ou siège" rows={2} value={formData.tireurAddress} onChange={handleInputChange('tireurAddress')} />
+              <Textarea
+                label="Adresse ou siège"
+                rows={2}
+                value={formData.tireurAddress}
+                onChange={handleInputChange('tireurAddress')}
+                onFocus={() => handleFieldFocus('tireurAddress')}
+                onBlur={handleFieldBlur}
+                className={getFieldClassName('tireurAddress')}
+              />
             )}
           </div>
           {renderNextButton()}
@@ -121,13 +199,21 @@ export function FillingForm({
         <AccordionItem value="beneficiary" title="3. Bénéficiaire & Détails">
           <div className="space-y-4">
             {isFrameEnabled('beneficiary_name') && (
-              <Input
-                label="Bénéficiaire"
-                value={formData.beneficiaryName}
-                onChange={handleInputChange('beneficiaryName')}
-                placeholder="Nom du bénéficiaire"
-              />
-            )}
+                <Input
+                  label="Bénéficiaire"
+                  value={formData.beneficiaryName}
+                  onChange={handleInputChange('beneficiaryName')}
+                  placeholder="Nom du bénéficiaire"
+                  onFocus={() => handleFieldFocus('beneficiaryName')}
+                  onBlur={(event) => {
+                    touchField('beneficiaryName')
+                    handleFieldBlur(event)
+                  }}
+                  className={getFieldClassName('beneficiaryName')}
+                  error={fieldError('beneficiaryName')}
+                  reserveErrorSpace
+                />
+              )}
             {formData.amountText && isFrameEnabled('amount_text') && (
               <div className="rounded-xl border border-emerald-100 bg-gradient-to-r from-emerald-50 to-emerald-50/50 p-3.5 text-sm italic leading-relaxed text-emerald-800 dark:border-emerald-800/50 dark:from-emerald-900/20 dark:to-emerald-900/10 dark:text-emerald-300">
                 <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-emerald-500 not-italic dark:text-emerald-400">
@@ -138,14 +224,37 @@ export function FillingForm({
             )}
             <div className="grid grid-cols-2 gap-4">
               {isFrameEnabled('creation_place') && (
-                <Input label="Lieu de création" value={formData.creationPlace} onChange={handleInputChange('creationPlace')} />
+                <Input
+                  label="Lieu de création"
+                  value={formData.creationPlace}
+                  onChange={handleInputChange('creationPlace')}
+                  onFocus={() => handleFieldFocus('creationPlace')}
+                  onBlur={handleFieldBlur}
+                  className={getFieldClassName('creationPlace')}
+                />
               )}
               {isFrameEnabled('date_creation') && (
-                <Input type="date" label="Date de création" value={formData.creationDate} onChange={handleInputChange('creationDate')} />
+                <Input
+                  type="date"
+                  label="Date de création"
+                  value={formData.creationDate}
+                  onChange={handleInputChange('creationDate')}
+                  onFocus={() => handleFieldFocus('creationDate')}
+                  onBlur={handleFieldBlur}
+                  className={getFieldClassName('creationDate')}
+                />
               )}
             </div>
             {isFrameEnabled('cause') && (
-              <Input label="La cause" value={formData.cause} onChange={handleInputChange('cause')} placeholder="Ex: Facture N° 123" />
+              <Input
+                label="La cause"
+                value={formData.cause}
+                onChange={handleInputChange('cause')}
+                placeholder="Ex: Facture N° 123"
+                onFocus={() => handleFieldFocus('cause')}
+                onBlur={handleFieldBlur}
+                className={getFieldClassName('cause')}
+              />
             )}
           </div>
           {renderNextButton()}
@@ -160,12 +269,19 @@ export function FillingForm({
                   <input
                     id={drawerNameId}
                     type="text"
-                    className="form-input font-bold"
+                    className={`form-input font-bold ${getFieldClassName('drawerName')}`}
                     placeholder="Rechercher un client..."
                     value={formData.drawerName}
                     onChange={handleDrawerChange}
-                    onFocus={() => handleFocus(formData.drawerName)}
-                    onBlur={handleBlur}
+                    onFocus={() => {
+                      handleFieldFocus('drawerName')
+                      handleFocus(formData.drawerName)
+                    }}
+                    onBlur={(event) => {
+                      touchField('drawerName')
+                      handleBlur(event)
+                      handleFieldBlur(event)
+                    }}
                     onKeyDown={(event) => handleKeyDown(event, handleSelectCustomer)}
                     role="combobox"
                     aria-autocomplete="list"
@@ -196,20 +312,56 @@ export function FillingForm({
                     </div>
                   )}
                 </div>
+                <div className="min-h-5">
+                  {fieldError('drawerName') ? <p className="form-error">{fieldError('drawerName')}</p> : null}
+                </div>
               </div>
             )}
 
             {isFrameEnabled('drawer_address') && (
-              <Textarea label="Adresse ou siège" rows={2} value={formData.drawerAddress} onChange={handleInputChange('drawerAddress')} />
+              <Textarea
+                label="Adresse ou siège"
+                rows={2}
+                value={formData.drawerAddress}
+                onChange={handleInputChange('drawerAddress')}
+                onFocus={() => handleFieldFocus('drawerAddress')}
+                onBlur={handleFieldBlur}
+                className={getFieldClassName('drawerAddress')}
+              />
             )}
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {isFrameEnabled('account_number') && (
-                <Input label="Compte N°" value={formData.accountNumber} onChange={handleInputChange('accountNumber')} />
+                <Input
+                  label="Compte N°"
+                  value={formData.accountNumber}
+                  onChange={handleInputChange('accountNumber')}
+                  onFocus={() => handleFieldFocus('accountNumber')}
+                  onBlur={handleFieldBlur}
+                  className={getFieldClassName('accountNumber')}
+                />
               )}
-              {isFrameEnabled('agency') && <Input label="Agence" value={formData.agency} onChange={handleInputChange('agency')} />}
+              {isFrameEnabled('agency') && (
+                <Input
+                  label="Agence"
+                  value={formData.agency}
+                  onChange={handleInputChange('agency')}
+                  onFocus={() => handleFieldFocus('agency')}
+                  onBlur={handleFieldBlur}
+                  className={getFieldClassName('agency')}
+                />
+              )}
             </div>
-            {isFrameEnabled('city') && <Input label="Ville" value={formData.city} onChange={handleInputChange('city')} />}
+            {isFrameEnabled('city') && (
+              <Input
+                label="Ville"
+                value={formData.city}
+                onChange={handleInputChange('city')}
+                onFocus={() => handleFieldFocus('city')}
+                onBlur={handleFieldBlur}
+                className={getFieldClassName('city')}
+              />
+            )}
           </div>
           {renderNextButton()}
         </AccordionItem>
@@ -222,9 +374,21 @@ export function FillingForm({
                 label="Date de l'acceptation"
                 value={formData.dateAcceptance}
                 onChange={handleInputChange('dateAcceptance')}
+                onFocus={() => handleFieldFocus('dateAcceptance')}
+                onBlur={handleFieldBlur}
+                className={getFieldClassName('dateAcceptance')}
               />
             )}
-            {isFrameEnabled('aval') && <Input label="Bon pour aval" value={formData.aval} onChange={handleInputChange('aval')} />}
+            {isFrameEnabled('aval') && (
+              <Input
+                label="Bon pour aval"
+                value={formData.aval}
+                onChange={handleInputChange('aval')}
+                onFocus={() => handleFieldFocus('aval')}
+                onBlur={handleFieldBlur}
+                className={getFieldClassName('aval')}
+              />
+            )}
           </div>
           <div className="mt-6 border-t border-slate-100 pt-4 dark:border-slate-700/50">
             <Button variant="accent" onClick={saveOperation} className="w-full py-3">

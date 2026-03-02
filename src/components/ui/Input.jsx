@@ -3,6 +3,7 @@ import { forwardRef, useId } from 'react';
 export const Input = forwardRef(({
     label,
     error,
+    reserveErrorSpace = false,
     icon,
     className = '',
     type = 'text',
@@ -27,7 +28,13 @@ export const Input = forwardRef(({
                 />
             </div>
 
-            {error && <p className="form-error">{error}</p>}
+            {reserveErrorSpace ? (
+                <div className="min-h-5">
+                    {error ? <p className="form-error">{error}</p> : null}
+                </div>
+            ) : (
+                error ? <p className="form-error">{error}</p> : null
+            )}
         </div>
     );
 });
@@ -37,6 +44,7 @@ Input.displayName = 'Input';
 export const Textarea = forwardRef(({
     label,
     error,
+    reserveErrorSpace = false,
     className = '',
     containerClassName = '',
     rows = 3,
@@ -57,7 +65,13 @@ export const Textarea = forwardRef(({
                 {...props}
             />
 
-            {error && <p className="form-error">{error}</p>}
+            {reserveErrorSpace ? (
+                <div className="min-h-5">
+                    {error ? <p className="form-error">{error}</p> : null}
+                </div>
+            ) : (
+                error ? <p className="form-error">{error}</p> : null
+            )}
         </div>
     );
 });

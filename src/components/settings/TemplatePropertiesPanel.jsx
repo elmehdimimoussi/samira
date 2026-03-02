@@ -23,8 +23,8 @@ export function TemplatePropertiesPanel({
       <div className="properties-body">
         {selectedFrame ? (
           <div className="flex h-full flex-col">
-            <Accordion type="multiple" defaultValue={['identity', 'position', 'appearance']} className="w-full flex-1 overflow-y-auto">
-              <AccordionItem value="identity" title="Identite">
+            <Accordion type="single" defaultValue="general" className="w-full flex-1 overflow-y-auto">
+              <AccordionItem value="general" title="General">
                 <div className="space-y-4">
                   <Input label="Nom du champ" value={selectedFrame.label} onChange={(event) => updateFrame(selectedFrame.id, { label: event.target.value })} />
                   <div className="form-group">
@@ -38,12 +38,14 @@ export function TemplatePropertiesPanel({
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Afficher ce champ</span>
                     <button
+                      type="button"
                       onClick={() => updateFrame(selectedFrame.id, { enabled: !selectedFrame.enabled })}
-                      className={`rounded-lg p-1.5 transition-colors ${
+                      className={`rounded-lg p-1.5 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-1 ${
                         selectedFrame.enabled
                           ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                           : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
                       }`}
+                      aria-label={selectedFrame.enabled ? 'Masquer ce champ' : 'Afficher ce champ'}
                     >
                       {selectedFrame.enabled ? <Eye size={18} /> : <EyeOff size={18} />}
                     </button>
@@ -126,11 +128,13 @@ export function TemplatePropertiesPanel({
                     </div>
                   </div>
                   <button
+                    type="button"
                     className={`rounded-md p-1 transition-colors hover:bg-slate-100 dark:hover:bg-slate-700 ${frame.enabled ? 'text-green-600' : 'text-slate-400'}`}
                     onClick={(event) => {
                       event.stopPropagation()
                       updateFrame(frame.id, { enabled: !frame.enabled })
                     }}
+                    aria-label={frame.enabled ? `Masquer ${frame.label}` : `Afficher ${frame.label}`}
                   >
                     {frame.enabled ? <Eye size={14} /> : <EyeOff size={14} />}
                   </button>
