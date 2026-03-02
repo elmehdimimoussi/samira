@@ -31,18 +31,7 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-- Preview-first UX: Plan preserves LC preview prominence, including target layout
-  allocation and fullscreen behavior when applicable.
-- Modular boundaries: Plan identifies component splits and flags any file expected
-  to exceed 300 lines with explicit justification.
-- Custom hooks ownership: Plan isolates complex form/business/designer/IPC logic in
-  hooks and keeps rendering components presentational.
-- Data integrity: Plan aligns schema and UI fields (including account_number,
-  agency, city where relevant) and defines zod validation boundaries.
-- Secure IPC: Plan routes renderer-side privileged operations via
-  `window.electronAPI` only, with error-handling strategy.
-- Performance: Plan documents memoization and rendering safeguards for heavy canvas,
-  drag/drop, and image workflows.
+[Gates determined based on constitution file]
 
 ## Project Structure
 

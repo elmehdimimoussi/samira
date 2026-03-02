@@ -9,6 +9,7 @@ const mockElectronAPI = {
     delete: vi.fn().mockResolvedValue(true),
   },
   operations: {
+    generateRef: vi.fn().mockResolvedValue('REF-001'),
     getAll: vi.fn().mockResolvedValue([]),
     add: vi.fn().mockResolvedValue({ id: 1 }),
     delete: vi.fn().mockResolvedValue(true),
@@ -23,9 +24,14 @@ const mockElectronAPI = {
   },
   frames: {
     getAll: vi.fn().mockResolvedValue([]),
+    save: vi.fn().mockResolvedValue(true),
     add: vi.fn().mockResolvedValue({ id: 1 }),
     update: vi.fn().mockResolvedValue(true),
     delete: vi.fn().mockResolvedValue(true),
+  },
+  backup: {
+    export: vi.fn().mockResolvedValue('{}'),
+    import: vi.fn().mockResolvedValue({ success: true }),
   },
 }
 

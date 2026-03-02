@@ -40,7 +40,7 @@
   }
 
   .page-header {
-    @apply px-8 py-4 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 flex justify-between items-center sticky top-0 z-30 transition-all dark:bg-slate-950/90 dark:border-slate-800/80 shadow-sm;
+    @apply px-8 py-2.5 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 flex justify-between items-center sticky top-0 z-30 transition-all dark:bg-slate-950/90 dark:border-slate-800/80 shadow-sm;
   }
 
   .page-title {
@@ -412,11 +412,11 @@
 /* ═══════════════════════════════════════════ */
 .filling-layout {
   display: grid;
-  grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
+  grid-template-columns: minmax(240px, 0.28fr) 1fr;
   gap: 1.5rem;
   height: 100%;
   overflow: hidden;
-  padding-bottom: 2rem; /* Add breathing room at bottom */
+  padding-bottom: 2rem;
 }
 
 .expanded-preview .filling-layout {
@@ -424,9 +424,7 @@
 }
 
 .filling-form {
-  /* Added padding-bottom to separate content from bottom edge */
   @apply overflow-y-auto pr-2 pl-1 pb-10 min-h-0;
-  /* Hide horizontal scrollbar if it appears */
   overflow-x: hidden;
 }
 
@@ -444,7 +442,7 @@
 }
 
 .preview-canvas {
-  @apply flex-1 overflow-auto p-3 md:p-4 flex items-center justify-center relative min-h-0 bg-slate-50/50 dark:bg-slate-950/50;
+  @apply flex-1 overflow-hidden p-3 md:p-4 flex items-center justify-center relative min-h-0 bg-slate-50/50 dark:bg-slate-950/50;
   background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
   background-size: 24px 24px;
 }
@@ -494,6 +492,14 @@
   @apply px-4 py-3 cursor-pointer transition-colors hover:bg-blue-50 dark:hover:bg-slate-700/50 border-b border-slate-50 last:border-0 dark:border-slate-700/50 flex flex-col gap-0.5;
 }
 
+.autocomplete-item.active {
+  @apply bg-blue-50 dark:bg-slate-700/70;
+}
+
+.autocomplete-empty {
+  @apply px-4 py-3 text-sm text-slate-500 dark:text-slate-400;
+}
+
 .autocomplete-item-name {
   @apply text-sm font-semibold text-slate-800 dark:text-slate-200;
 }
@@ -507,9 +513,25 @@
 /* ═══════════════════════════════════════════ */
 .designer-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
+  grid-template-columns: 1fr minmax(240px, 280px);
   gap: 1.5rem;
-  height: calc(100vh - 170px);
+  height: calc(100vh - 130px);
+}
+
+.fullscreen-overlay {
+  @apply fixed inset-0 z-[100] flex items-center justify-center bg-slate-950;
+}
+
+.fullscreen-close {
+  @apply absolute right-4 top-4 z-[101] inline-flex h-10 w-10 items-center justify-center rounded-lg border border-slate-700 bg-slate-900/80 text-slate-200;
+}
+
+.fullscreen-content {
+  @apply h-full w-full p-4;
+}
+
+.fullscreen-preview {
+  @apply h-full;
 }
 
 .designer-canvas-container {
