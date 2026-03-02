@@ -1,105 +1,179 @@
 <!--
-Sync Impact Report
-- Version change: 1.0.0 -> 2.0.0
-- Modified principles:
-  - I. Spec-Driven Delivery (MUST) -> I. Preview-First User Experience (NON-NEGOTIABLE)
-  - II. Minimal Change Surface (MUST) -> II. Modular Component Boundaries
-  - III. Regression Safety (MUST) -> III. Predictable State via Custom Hooks
-  - IV. Contract and Data Stability (MUST) -> IV. Data Integrity and Schema Alignment
-  - V. Accessibility and Usability Baseline (MUST) -> V. Secure IPC and Responsive Performance
-- Added sections:
-  - UI and Styling Standards
-  - Delivery Workflow and Quality Gates
-- Removed sections:
-  - Additional Constraints
-  - Workflow and Quality Gates
-- Templates requiring updates:
-  - ✅ updated: .specify/templates/plan-template.md
-  - ✅ updated: .specify/templates/spec-template.md
-  - ✅ updated: .specify/templates/tasks-template.md
-  - ✅ not present (no action): .specify/templates/commands/*.md
-- Deferred follow-up TODOs:
-  - None
+  Sync Impact Report
+  ===================================================
+  Version change: 0.0.0 (template) → 1.0.0
+  Modified principles: N/A (initial ratification)
+  Added sections:
+    - I. Code Quality & Modularity (new)
+    - II. Testing Discipline (new)
+    - III. User Experience Consistency (new)
+    - IV. Performance & Responsiveness (new)
+    - Technology Stack Constraints (new section)
+    - Development Workflow (new section)
+    - Governance (populated)
+  Removed sections: None
+  Templates requiring updates:
+    - .specify/templates/plan-template.md ✅ compatible (Constitution Check section is generic)
+    - .specify/templates/spec-template.md ✅ compatible (no constitution-specific references)
+    - .specify/templates/tasks-template.md ✅ compatible (phase structure aligns with principles)
+    - .specify/templates/checklist-template.md ✅ compatible (generic structure)
+    - .specify/templates/agent-file-template.md ✅ compatible (no constitution references)
+  Follow-up TODOs: None
+  ===================================================
 -->
 
 # LC Pro Constitution
 
 ## Core Principles
 
-### I. Preview-First User Experience (NON-NEGOTIABLE)
-The application MUST maximize readability and prominence of the Lettre de Change
-preview. Primary filling and design workflows MUST allocate about 70% or more of
-desktop width to the preview canvas. Top-level navigation MUST use compact top tabs,
-and the topbar MUST stay space-efficient with reduced visual chrome. Fullscreen
-preview overlays MUST use `fixed inset-0 z-[100]` with a solid dark background and
-MUST suppress underlying app scrollbars and UI visibility.
-Rationale: LC accuracy depends on clear visual verification during data entry.
+### I. Code Quality & Modularity
 
-### II. Modular Component Boundaries
-UI components MUST follow single responsibility. Any UI file exceeding 300 lines is
-a refactor trigger unless an exception is documented in the implementation plan's
-complexity tracking section. Form UI and preview UI MUST be separated, and the
-template designer canvas MUST be separated from its properties panels.
-Rationale: Smaller boundaries reduce regression risk and speed up iterative UX work.
+- Every React component MUST have a single, well-defined responsibility.
+  Page-level files serve as composition and layout layers only;
+  business logic MUST be extracted into custom hooks (`src/hooks/`),
+  and reusable UI elements MUST reside in `src/components/ui/`.
+- All data crossing IPC boundaries or entering forms MUST be validated
+  with Zod schemas defined in `src/validation/`. Schema definitions
+  MUST be co-located by domain entity.
+- ESLint MUST pass with zero errors before any code is merged.
+  The `no-unused-vars` and `react-hooks/exhaustive-deps` rules
+  MUST NOT be disabled via inline comments without a written
+  justification in the PR description.
+- Service modules in `src/services/` MUST be pure functions with no
+  side effects or DOM dependencies, enabling deterministic unit testing.
+- File size guideline: no single source file SHOULD exceed 300 lines.
+  Files exceeding this threshold MUST be split or justified in the PR.
 
-### III. Predictable State via Custom Hooks
-Complex form, business, designer, and IPC coordination logic MUST live in custom
-hooks (for example `useLCForm`, `useTemplateDesigner`, `useCustomers`). Components
-MUST remain focused on rendering and user interaction wiring. State transitions and
-derived values MUST be explicit and centralized in hooks rather than duplicated in
-multiple presentation components.
-Rationale: Predictable state boundaries keep behavior testable and maintainable.
+**Rationale**: Modular code with enforced boundaries reduces coupling,
+simplifies reviews, and makes incremental feature delivery safe.
 
-### IV. Data Integrity and Schema Alignment
-Data entities and UI forms MUST mirror required LC domain fields exactly, including
-`account_number`, `agency`, and `city` where applicable. All create and update flows
-MUST validate payloads with `zod` before invoking IPC operations. Linked-entity
-autocomplete interactions (such as drawer selection) MUST atomically populate all
-related fields (address, account number, agency, city) in main form state.
-Rationale: Domain correctness prevents banking-document errors and invalid storage.
+### II. Testing Discipline
 
-### V. Secure IPC and Responsive Performance
-The renderer process MUST NOT access Node.js modules directly and MUST communicate
-through `window.electronAPI` exposed by `preload.cjs`. IPC calls MUST be wrapped in
-`try/catch` and failures MUST surface friendly `sonner` toast messages. Heavy visual
-components (notably LC canvas and draggable frames) MUST use `React.memo`, `useMemo`,
-and `useCallback` where relevant to keep interactions smooth. Template image rendering
-MUST use efficient scaling and avoid unnecessary DOM load.
-Rationale: Security isolation and sustained responsiveness are core product qualities.
+- Every new service function and custom hook MUST ship with
+  corresponding Vitest tests in `src/__tests__/`.
+- Test file placement MUST mirror the source tree:
+  `src/__tests__/services/` for services,
+  `src/__tests__/components/` for components,
+  `src/__tests__/pages/` for page-level integration tests.
+- Tests MUST use `@testing-library/react` and
+  `@testing-library/user-event` for component assertions.
+  Direct DOM queries (e.g., `querySelector`) MUST NOT be used
+  when a Testing Library query is available.
+- The `npm test` command MUST exit with zero failures on the default
+  branch at all times. A failing test on the default branch is treated
+  as a P0 incident.
+- Bug-fix PRs MUST include a regression test that fails without the
+  fix and passes with it.
+- Coverage SHOULD be monitored via `npm run test:coverage`. New code
+  MUST NOT decrease overall line coverage below the current baseline.
 
-## UI and Styling Standards
+**Rationale**: Consistent, well-placed tests catch regressions early
+and give confidence during the modular refactoring this project
+requires.
 
-- Tailwind CSS v4 is the default styling system for all UI work.
-- Custom CSS files MAY be introduced only for complex animation cases or
-  third-party overrides that Tailwind utilities cannot express cleanly.
-- Layout work MUST ensure `ResponsivePreviewWrapper` fully consumes parent width and
-  height across supported viewport sizes.
-- Desktop-first workspace optimization MUST NOT regress mobile usability.
-- Product direction is offline-first desktop behavior; changes MUST preserve local
-  operation when network access is unavailable.
+### III. User Experience Consistency
 
-## Delivery Workflow and Quality Gates
+- All user-facing feedback (success, error, info) MUST use Sonner
+  toast notifications. Ad-hoc `alert()` or `console.log` for user
+  messaging is prohibited.
+- Light and dark themes MUST be supported for every new UI element.
+  Theme-dependent colors MUST use Tailwind CSS utility classes that
+  include both light and `dark:` variants.
+- Icon usage MUST exclusively use Lucide React. Mixing icon libraries
+  or inline SVGs is prohibited.
+- Interactive elements MUST be keyboard-accessible: focusable via Tab,
+  activatable via Enter/Space, and dismissable via Escape where
+  applicable (modals, fullscreen overlays, dropdowns).
+- Layout MUST be responsive: desktop-first with usable fallbacks down
+  to 768 px viewport width. The preview panel in Filling and Settings
+  pages MUST occupy at least 65% of horizontal space on screens
+  wider than 1024 px.
+- Fullscreen overlays MUST use the shared pattern:
+  `fixed inset-0 z-[100] bg-slate-950`, with a visible close button
+  and Escape-to-close behavior, and MUST lock body scroll.
 
-- Each implementation plan MUST pass a constitution check for preview allocation,
-  modular boundaries, hook ownership of complex state, schema alignment, IPC safety,
-  and performance strategy.
-- Each feature spec MUST declare impacts to UI space allocation, component/hook
-  boundaries, schema/validation, IPC paths, and rendering performance.
-- Tasks MUST explicitly include work items for zod validation, secure IPC handling,
-  and performance safeguards when those concerns are in scope.
-- Pull requests MUST include evidence that constitution-relevant constraints were
-  verified (manual checks, automated tests, or both).
+**Rationale**: Uniform interaction patterns reduce cognitive load for
+users and prevent inconsistency as the UI grows.
+
+### IV. Performance & Responsiveness
+
+- React components rendering frequently (e.g., preview panels, canvas
+  interactions) MUST use `React.memo`, `useMemo`, or `useCallback`
+  to prevent unnecessary re-renders. Memoization decisions MUST be
+  justified by measurable render frequency, not applied speculatively.
+- Event handlers attached to high-frequency events (drag, resize,
+  scroll, input) MUST be debounced or throttled where the callback
+  performs expensive operations (DOM measurement, IPC calls, large
+  state updates).
+- The Vite production build (`npm run build`) MUST complete without
+  warnings. Bundle size regressions exceeding 50 KB (gzipped) MUST
+  be justified.
+- Electron IPC calls MUST be wrapped in `try/catch` with user-friendly
+  error toasts. Long-running IPC operations SHOULD show a loading
+  indicator.
+- PDF generation and image capture (`jsPDF`, `html2canvas`) MUST NOT
+  block the main thread for more than 2 seconds on reference hardware.
+  If exceeded, the operation MUST be deferred or chunked.
+
+**Rationale**: A desktop application handling financial documents must
+feel instantaneous; perceived latency erodes user trust and
+productivity.
+
+## Technology Stack Constraints
+
+- **Runtime**: Electron 30 (Chromium) + Node.js ≥ 18
+- **UI**: React 19, React Router 7, Tailwind CSS 4, Lucide React,
+  Sonner
+- **Validation**: Zod
+- **PDF**: jsPDF + html2canvas
+- **Build**: Vite 7, PostCSS, electron-builder
+- **Testing**: Vitest 4, @testing-library/react,
+  @testing-library/user-event, jsdom
+- **Linting**: ESLint 9 with react-hooks and react-refresh plugins
+- **Data**: Local JSON file (`lc-bmci-data.json` in AppData).
+  No external network calls for data persistence.
+- New runtime dependencies MUST NOT be added without documented
+  justification (bundle size impact, license compatibility, and
+  maintenance status). Prefer extending existing libraries before
+  adding new ones.
+
+## Development Workflow
+
+- **Branch strategy**: Feature branches off `main`. Branch naming
+  follows the pattern `###-feature-name` (e.g., `001-compact-topbar`).
+- **Quality gate before merge**:
+  1. `npm test` — all tests pass.
+  2. `npm run lint` — zero ESLint errors.
+  3. Manual smoke test of affected pages in both light and dark mode.
+- **Commit messages**: Use conventional commits
+  (`feat:`, `fix:`, `refactor:`, `docs:`, `test:`, `chore:`).
+- **Feature delivery**: Each feature MUST be delivered as an
+  independently testable user story increment. Partial implementations
+  MUST NOT be merged unless gated behind a feature flag or
+  non-reachable code path.
+- **Documentation**: Changes to public-facing behavior MUST update
+  the relevant section in `README.md` or `docs/`.
 
 ## Governance
 
-- This constitution overrides conflicting local engineering habits and guidance.
-- Amendments require: (1) a documented rationale, (2) updates to dependent templates
-  under `.specify/templates/`, and (3) a Sync Impact Report in the constitution file.
-- Versioning policy for this constitution follows semantic versioning:
-  - MAJOR: incompatible principle removals or redefinitions.
-  - MINOR: new principles/sections or materially expanded mandates.
-  - PATCH: clarifications, wording improvements, typo/non-semantic edits.
-- Compliance review is required for every plan and pull request that changes product
-  behavior, data contracts, or UI architecture.
+- This constitution is the authoritative source of project standards.
+  Where it conflicts with ad-hoc practices or external guides, this
+  document prevails.
+- Amendments require:
+  1. A written proposal describing the change and its rationale.
+  2. Version increment following semantic versioning (see below).
+  3. Update of `LAST_AMENDED_DATE`.
+  4. Propagation check across `.specify/templates/` and `AGENTS.md`.
+- **Versioning policy**:
+  - MAJOR: Principle removed, redefined, or backward-incompatible
+    governance change.
+  - MINOR: New principle or section added, or material expansion of
+    existing guidance.
+  - PATCH: Wording clarification, typo fix, non-semantic refinement.
+- Compliance review: Every PR MUST be checked against the active
+  principles. Reviewers SHOULD reference the specific principle
+  number (e.g., "P-II: missing regression test") when requesting
+  changes.
+- Runtime development guidance is maintained in `AGENTS.md`.
 
-**Version**: 2.0.0 | **Ratified**: 2026-02-16 | **Last Amended**: 2026-02-22
+**Version**: 1.0.0 | **Ratified**: 2026-03-02 | **Last Amended**: 2026-03-02

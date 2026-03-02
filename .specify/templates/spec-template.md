@@ -100,20 +100,6 @@
 - **[Entity 1]**: [What it represents, key attributes without implementation]
 - **[Entity 2]**: [What it represents, relationships to other entities]
 
-### Constitution Alignment *(mandatory for LC Pro)*
-
-- **CA-001 Preview Impact**: [Explain how the feature preserves or improves preview
-  prominence and workspace efficiency, including fullscreen behavior if relevant]
-- **CA-002 Component Boundaries**: [List new/changed components and how
-  single-responsibility boundaries are maintained]
-- **CA-003 Hook Ownership**: [Identify custom hooks owning complex state and what UI
-  remains presentational]
-- **CA-004 Data Integrity**: [Describe schema/UI alignment and zod validation before
-  IPC writes]
-- **CA-005 IPC Safety**: [Document `window.electronAPI` bridge usage and user-facing
-  error fallback behavior]
-- **CA-006 Performance**: [Describe memoization/rendering safeguards for heavy UI]
-
 ## Success Criteria *(mandatory)*
 
 <!--

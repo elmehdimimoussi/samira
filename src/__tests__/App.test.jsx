@@ -78,7 +78,7 @@ describe('App shell', () => {
     const topbar = screen.getByTestId('app-topbar')
     const navScroll = screen.getByTestId('topbar-nav-scroll')
 
-    expect(topbar.className).toMatch(/h-14/)
+    expect(topbar.className).toMatch(/h-10/)
     expect(navScroll.className).toMatch(/overflow-x-auto/)
   })
 

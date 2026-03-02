@@ -23,15 +23,15 @@ function App() {
       <header
         data-shell-topbar
         data-testid="app-topbar"
-        className="z-40 flex h-14 shrink-0 items-center gap-2 border-b border-slate-200/70 bg-white/95 px-3 shadow-sm backdrop-blur-xl md:h-15 md:gap-3 md:px-5 dark:border-slate-800/80 dark:bg-slate-950/95"
+        className="z-40 flex h-10 shrink-0 items-center gap-1.5 border-b border-slate-200/70 bg-white/95 px-2 shadow-sm backdrop-blur-xl md:h-11 md:gap-2 md:px-3 dark:border-slate-800/80 dark:bg-slate-950/95"
       >
-        <div className="hidden shrink-0 items-center gap-2.5 md:flex">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-600/25">
+        <div className="hidden shrink-0 items-center gap-2 md:flex">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-600/25">
             <Wallet size={20} strokeWidth={1.6} />
           </div>
           <div>
             <p className="text-sm font-bold tracking-tight text-slate-900 dark:text-white">LC Pro</p>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400">Gestionnaire BMCI</p>
+            <p className="hidden text-[10px] text-slate-500 dark:text-slate-400 lg:block">Gestionnaire BMCI</p>
           </div>
         </div>
 
@@ -40,7 +40,7 @@ function App() {
             data-testid="topbar-nav-scroll"
             className="overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
-            <ul className="flex min-w-full w-max items-center gap-1 whitespace-nowrap pr-2 md:gap-1.5">
+            <ul className="flex min-w-full w-max items-center gap-1 whitespace-nowrap pr-2 md:gap-1">
               {NAV_ITEMS.map((item) => (
                 <li key={item.path}>
                   <NavLink
@@ -49,7 +49,7 @@ function App() {
                     title={item.description}
                     data-testid={`nav-link-${item.label.toLowerCase()}`}
                     className={({ isActive }) =>
-                      `inline-flex shrink-0 items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[13px] font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 md:px-3 ${
+                      `inline-flex shrink-0 items-center gap-1.5 rounded-lg border px-2 py-1 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 md:px-2 ${
                         isActive
                           ? 'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800/60 dark:bg-blue-900/25 dark:text-blue-300'
                           : 'border-transparent text-slate-600 hover:border-slate-200 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:border-slate-700 dark:hover:bg-slate-800/60 dark:hover:text-slate-100'
